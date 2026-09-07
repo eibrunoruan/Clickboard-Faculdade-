@@ -11,6 +11,9 @@ import '../../../../../core/utils/validators/validators.dart';
 import '../../../../../providers/utils_providers.dart';
 import '../../../controllers/authentication_controller.dart';
 
+const bool useFirebase =
+    bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
+
 class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
   @override
@@ -35,7 +38,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    var authController = ref.watch(authControllerProvider);
+    final authController =
+        useFirebase ? ref.watch(authControllerProvider) : false;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
       child: Form(
@@ -70,6 +74,15 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             ),
             MainButton(
               onPressed: () {
+                if (!useFirebase) {
+                  showSnackBar(
+                    context: context,
+                    title: 'Firebase disabled for simulator run',
+                    snackBarType: SnackBarType.error,
+                  );
+                  return;
+                }
+
                 if (_formKey.currentState!.validate() &&
                     !ref.read(authControllerProvider)) {
                   ref.read(authControllerProvider.notifier).loginUser(
@@ -98,6 +111,15 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             ),
             TextButton(
                 onPressed: () {
+                  if (!useFirebase) {
+                    showSnackBar(
+                      context: context,
+                      title: 'Firebase disabled for simulator run',
+                      snackBarType: SnackBarType.error,
+                    );
+                    return;
+                  }
+
                   GoRouter.of(context).push('/auth/forgot-password');
                 },
                 child: Text(

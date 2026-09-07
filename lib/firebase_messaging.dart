@@ -1,25 +1,49 @@
 import 'dart:convert';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 Future<void> handleBackgroundMessage(RemoteMessage message) async {
-  print('Title : ${message.notification?.title}');
-  print('Body : ${message.notification?.body}');
-  print('Payload : ${message.data}');
+  debugPrint('Title : ${message.notification?.title}');
+  debugPrint('Body : ${message.notification?.body}');
+  debugPrint('Payload : ${message.data}');
 }
 
 class FirebaseMessagingApi {
   final _firebaseMessaging = FirebaseMessaging.instance;
+
   Future<void> initNotifications() async {
     await _firebaseMessaging.requestPermission();
-    final fcmToken = await _firebaseMessaging.getToken();
-    print('TOKEN : $fcmToken');
-    initPushNotifications();
-    initLocalNotification();
+    await initPushNotifications();
+    await initLocalNotification();
+    await _logFcmToken();
   }
 
-  Future initPushNotifications() async {
+  Future<void> _logFcmToken() async {
+    try {
+      if (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS) {
+        final apnsToken = await _firebaseMessaging.getAPNSToken();
+        if (apnsToken == null) {
+          debugPrint('APNS token is not available yet; skipping FCM token.');
+          return;
+        }
+      }
+
+      final fcmToken = await _firebaseMessaging.getToken();
+      debugPrint('TOKEN : $fcmToken');
+    } on FirebaseException catch (e) {
+      if (e.code == 'apns-token-not-set') {
+        debugPrint('APNS token is not available yet; skipping FCM token.');
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> initPushNotifications() async {
     await _firebaseMessaging.setForegroundNotificationPresentationOptions(
         alert: true, badge: true, sound: true);
     _firebaseMessaging.getInitialMessage().then(handleMessage);
@@ -29,10 +53,10 @@ class FirebaseMessagingApi {
       final notification = message.notification;
       if (notification == null) return;
       _localNotifications.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
+          id: notification.hashCode,
+          title: notification.title,
+          body: notification.body,
+          notificationDetails: NotificationDetails(
               android: AndroidNotificationDetails(
                   _androidChannel.id, _androidChannel.name,
                   icon: '@drawable/ic_launcher')),
@@ -61,7 +85,8 @@ class FirebaseMessagingApi {
             android: initializationSettingsAndroid,
             iOS: initializationSettingsDarwin,
             macOS: initializationSettingsDarwin);
-    await _localNotifications.initialize(initializationSettings,
+    await _localNotifications.initialize(
+        settings: initializationSettings,
         onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
     final platform = _localNotifications.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
@@ -70,7 +95,6 @@ class FirebaseMessagingApi {
 
   void onDidReceiveNotificationResponse(
       NotificationResponse notificationResponse) async {
-    final String? payload = notificationResponse.payload;
     if (notificationResponse.payload != null) {
       final message =
           RemoteMessage.fromMap(jsonDecode(notificationResponse.payload!));
