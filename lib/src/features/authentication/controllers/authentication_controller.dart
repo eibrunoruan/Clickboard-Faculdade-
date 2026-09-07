@@ -88,7 +88,7 @@ class AuthController extends _$AuthController {
     try {
       await _authRepository.reAuth(ref.read(myUserProvider)!.email, password);
     } on FirebaseAuthException catch (e) {
-      return left(e.message ?? 'Error');
+      return left(e.message ?? 'Erro');
     } catch (e) {
       return left(e.toString());
     }

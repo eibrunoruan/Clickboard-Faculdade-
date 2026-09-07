@@ -15,6 +15,6 @@ const String loginSubtitle = 'Please sign in to continue';
 
 //OTP
 const String otpTitle = 'Authentication';
-const String otpSubtitle = 'Please enter your OTP sent to';
+const String otpSubtitle = 'Informe o código OTP enviado para';
 
 //Account

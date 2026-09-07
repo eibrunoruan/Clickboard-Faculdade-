@@ -59,6 +59,6 @@ class ResultController extends _$ResultController {
     } catch (e) {
       return left(e.toString());
     }
-    return left('Accept file permissions to download file');
+    return left('Permita o acesso aos arquivos para baixar o arquivo');
   }
 }

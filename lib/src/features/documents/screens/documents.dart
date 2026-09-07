@@ -28,7 +28,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
               onPressed: () async {
                 if (documents.length >= 5) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Limit Reached")));
+                      const SnackBar(content: Text("Limite atingido")));
                 } else {
                   showDialog(
                     context: context,
@@ -43,7 +43,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                               CircularProgressIndicator(),
                               SizedBox(width: 20),
                               Text(
-                                "Loading...",
+                                "Carregando...",
                                 style: TextStyle(color: Colors.black),
                               ),
                             ],
@@ -62,7 +62,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                   }
                 }
               },
-              tooltip: 'Add a new document',
+              tooltip: 'Adicionar documento',
               child: const Icon(Icons.add),
             )
           : null,
@@ -101,7 +101,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                                 searchString = value;
                               });
                             },
-                            hintText: 'Document Name',
+                            hintText: 'Nome do documento',
                             hintStyle: MaterialStatePropertyAll(
                                 TextStyle(color: Colors.grey[500])),
                           );
@@ -123,7 +123,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                       .toList();
                   if (documents.isEmpty) {
                     return const SliverToBoxAdapter(
-                        child: Center(child: Text('No Documents')));
+                        child: Center(child: Text('Nenhum documento')));
                   }
                   return SliverGrid.builder(
                     itemBuilder: (context, index) {
@@ -142,7 +142,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                   );
                 },
                 error: (error, stackTrace) {
-                  return const Center(child: Text('Error'));
+                  return const Center(child: Text('Erro'));
                 },
                 loading: () => const SliverToBoxAdapter(
                     child: Center(child: CircularProgressIndicator()))),

@@ -39,22 +39,22 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.black54,
-          title: const Text('Rename Document'),
+          title: const Text('Renomear documento'),
           content: TextField(
             controller: renameController,
             decoration: const InputDecoration(
-                hintText: 'Enter new name',
+                hintText: 'Informe o novo nome',
                 hintStyle: TextStyle(color: Colors.white30)),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Rename'),
+              child: const Text('Renomear'),
               onPressed: () {
                 if (renameController.text.isNotEmpty) {
                   ref
@@ -70,7 +70,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                             snackBarType: SnackBarType.error), (r) {
                       showSnackBar(
                           context: context,
-                          title: 'File renamed',
+                          title: 'Arquivo renomeado',
                           snackBarType: SnackBarType.good);
                     });
                   });
@@ -136,7 +136,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                         iconColor: Colors.greenAccent,
                         textColor: Colors.greenAccent,
                         splashColor: Colors.blueGrey,
-                        title: const Text('Download'),
+                        title: const Text('Baixar'),
                         trailing: const Icon(Icons.download_rounded),
                         onTap: () async {
                           showDialog(
@@ -152,7 +152,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                       CircularProgressIndicator(),
                                       SizedBox(width: 20),
                                       Text(
-                                        "Downloading...",
+                                        "Baixando...",
                                         style: TextStyle(color: Colors.black),
                                       ),
                                     ],
@@ -191,7 +191,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                           splashColor: Colors.blueGrey,
                           trailing: const Icon(
                               Icons.drive_file_rename_outline_rounded),
-                          title: const Text('Rename'),
+                          title: const Text('Renomear'),
                           onTap: () {
                             _showRenameDialog(context, ref, widget.document);
                           },
@@ -201,7 +201,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                           iconColor: Colors.redAccent,
                           splashColor: Colors.blueGrey,
                           textColor: Colors.redAccent,
-                          title: const Text('Delete'),
+                          title: const Text('Apagar'),
                           trailing: const Icon(Icons.delete_forever_rounded),
                           onTap: () async {
                             showDialog(
@@ -217,7 +217,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                         CircularProgressIndicator(),
                                         SizedBox(width: 20),
                                         Text(
-                                          "Deleting...",
+                                          "Apagando...",
                                           style: TextStyle(color: Colors.black),
                                         ),
                                       ],
@@ -239,7 +239,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                         snackBarType: SnackBarType.error), (r) {
                                   showSnackBar(
                                       context: context,
-                                      title: 'File deleted',
+                                      title: 'Arquivo apagado',
                                       snackBarType: SnackBarType.good);
                                 });
                               });

@@ -12,27 +12,27 @@ String? regValidate(String? value) {
     return null;
   }
   if (value == '') return null;
-  return "Please enter a valid registration number";
+  return "Informe um número de matrícula válido";
 }
 
 String? nameValidate(String? value) {
-  if (value == '') return 'Cannot be empty!';
+  if (value == '') return 'Campo obrigatório';
   return null;
 }
 
 String? emailValidate(String? value) {
-  if (value == '') return 'Cannot be empty!';
+  if (value == '') return 'Campo obrigatório';
   if (RegExp(r'^[a-zA-Z]{2}\d{4}@(cse|ece|it|ee|ce|me)\.jgec\.ac\.in$')
       .hasMatch((value ?? '').trim().toLowerCase())) {
     return null;
   }
-  return 'Invalid email';
+  return 'E-mail inválido';
 }
 
 String? passValidate(String? value) {
-  if (value == '') return 'Cannot be empty!';
+  if (value == '') return 'Campo obrigatório';
   if ((value?.length ?? 0) < 6) {
-    return 'Password length must be atleast 6';
+    return 'A senha deve ter pelo menos 6 caracteres';
   }
   return null;
 }

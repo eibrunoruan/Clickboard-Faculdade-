@@ -34,7 +34,7 @@ class AuthenticationRepository {
     UserCredential userCredential;
     try {
       if (!Student.isCollegeEmail(student.email)) {
-        return left('Please use your college email ID');
+        return left('Use seu e-mail institucional da faculdade');
       }
 
       userCredential = await _auth.createUserWithEmailAndPassword(
@@ -68,7 +68,7 @@ class AuthenticationRepository {
         }
         await GoogleSignIn().signOut();
         await _auth.signOut();
-        return left('Please use your college email ID');
+        return left('Use seu e-mail institucional da faculdade');
       }
 
       Student student;
@@ -88,7 +88,7 @@ class AuthenticationRepository {
       final ex = SignupWithEmailAndPasswordFailure.code(e.code);
       return left(ex.message);
     } catch (e) {
-      return left('Cancelled');
+      return left('Cancelado');
     }
   }
 

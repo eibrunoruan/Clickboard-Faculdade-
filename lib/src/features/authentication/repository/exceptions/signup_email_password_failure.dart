@@ -1,30 +1,30 @@
 class SignupWithEmailAndPasswordFailure {
   final String message;
-  const SignupWithEmailAndPasswordFailure([this.message = "An Error Occured"]);
+  const SignupWithEmailAndPasswordFailure([this.message = "Ocorreu um erro"]);
 
   factory SignupWithEmailAndPasswordFailure.code(String code) {
     switch (code) {
       case 'weak-password':
         return const SignupWithEmailAndPasswordFailure(
-            "Please enter a stronger password.");
+            "Informe uma senha mais forte.");
       case 'invalid-email':
         return const SignupWithEmailAndPasswordFailure(
-            "Email is not valid or badly formatted.");
+            "O e-mail é inválido ou está mal formatado.");
       case 'wrong-password' || 'user-not-found':
         return const SignupWithEmailAndPasswordFailure(
-            "The username or password is invalid.");
+            "E-mail ou senha inválidos.");
       case 'email-already-in-use':
         return const SignupWithEmailAndPasswordFailure(
-            "An account already exists with that email.");
+            "Já existe uma conta com esse e-mail.");
       case 'operation-not-allowed':
         return const SignupWithEmailAndPasswordFailure(
-            "Operation is not allowed. Please contact support.");
+            "Operação não permitida. Entre em contato com o suporte.");
       case 'user-disabled':
         return const SignupWithEmailAndPasswordFailure(
-            "This user has been disabled. Please contact support");
+            "Este usuário foi desativado. Entre em contato com o suporte.");
       case 'too-many-requests':
         return const SignupWithEmailAndPasswordFailure(
-            "Too many requests. Please wait.");
+            "Muitas tentativas. Aguarde um momento.");
       default:
         return const SignupWithEmailAndPasswordFailure();
     }

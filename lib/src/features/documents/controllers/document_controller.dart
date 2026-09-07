@@ -78,39 +78,43 @@ class DocumentController extends _$DocumentController {
     } catch (e) {
       return left(e.toString());
     }
-    return left('Accept file permissions to download file');
+    return left('Permita o acesso aos arquivos para baixar o documento');
   }
 
   FutureVoid deleteDocument(Document document) async {
-    if (!_isAdmin) return left('Only coordination can delete documents');
+    if (!_isAdmin) return left('Somente a coordenação pode apagar documentos');
 
     try {
       await DocumentRepository.deleteDocument(document);
       await getAllDocuments(isRefreshed: true);
       return right(null);
     } catch (e) {
-      return left('Couldn\'t delete document ${document.name}');
+      return left('Não foi possível apagar o documento ${document.name}');
     }
   }
 
   FutureVoid renameDocument(Document document,
       {required String newName}) async {
-    if (!_isAdmin) return left('Only coordination can rename documents');
+    if (!_isAdmin) {
+      return left('Somente a coordenação pode renomear documentos');
+    }
 
     try {
       final safeName = _safeDocumentName(document, newName);
-      if (safeName == null) return left('Please enter a valid document name');
+      if (safeName == null) {
+        return left('Informe um nome de documento válido');
+      }
 
       await DocumentRepository.renameDocument(document, safeName);
       await getAllDocuments(isRefreshed: true);
       return right(null);
     } catch (e) {
-      return left('Couldn\'t rename document ${document.name}');
+      return left('Não foi possível renomear o documento ${document.name}');
     }
   }
 
   FutureVoid uploadFiles() async {
-    if (!_isAdmin) return left('Only coordination can upload documents');
+    if (!_isAdmin) return left('Somente a coordenação pode enviar documentos');
 
     String? message;
     List<PlatformFile> result = await FilePicker.pickFiles(
@@ -122,7 +126,7 @@ class DocumentController extends _$DocumentController {
     final files = <PlatformFile>[];
     for (final file in result) {
       if (await file.length() > 2048 * 1024) {
-        message = 'Maximum file size is 2MB';
+        message = 'O tamanho máximo do arquivo é 2 MB';
         continue;
       }
       files.add(file);
@@ -136,7 +140,7 @@ class DocumentController extends _$DocumentController {
       await getAllDocuments(isRefreshed: true);
       return right(null);
     } catch (e) {
-      return left('Couldn\'t upload document(s)');
+      return left('Não foi possível enviar o(s) documento(s)');
     }
   }
 }
