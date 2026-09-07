@@ -11,10 +11,14 @@ import '/route_generator.dart';
 import 'src/core/utils/theme/theme.dart';
 import 'firebase_options.dart';
 
+const bool useFirebase = bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FirebaseMessagingApi().initNotifications();
+  if (useFirebase) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await FirebaseMessagingApi().initNotifications();
+  }
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -37,13 +41,15 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseAuth.instance.authStateChanges().listen((event) {
-      if (event != null) {
-        getData(event).then((value) {
-          ref.read(myGoRouterProvider).refresh();
-        });
-      }
-    });
+    if (useFirebase) {
+      FirebaseAuth.instance.authStateChanges().listen((event) {
+        if (event != null) {
+          getData(event).then((value) {
+            ref.read(myGoRouterProvider).refresh();
+          });
+        }
+      });
+    }
 
     return MaterialApp.router(
       darkTheme: AppTheme.darkTheme,

@@ -14,6 +14,9 @@ import 'widgets/login_form.dart';
 import 'widgets/login_text.dart';
 import 'widgets/signup_option.dart';
 
+const bool useFirebase =
+    bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
+
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
 
@@ -35,40 +38,54 @@ class LoginPage extends ConsumerWidget {
                 height: 20,
               ),
               const LoginForm(),
-              const Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                MyDividerOR(),
-                Text(
-                  "OR",
-                  style: TextStyle(color: Colors.grey, fontSize: 15),
-                ),
-                MyDividerOR()
-              ]),
+              const Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    MyDividerOR(),
+                    Text(
+                      "OR",
+                      style: TextStyle(color: Colors.grey, fontSize: 15),
+                    ),
+                    MyDividerOR()
+                  ]),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GoogleSignButton(
-                    onPressed: () => ref
-                        .read(authControllerProvider.notifier)
-                        .signInWithGoogle((user) {
-                      user.fold(
-                          (l) {
-                            if(l!='Cancelled')
-                            {showSnackBar(
-                              context: context,
-                              title: l,
-                              snackBarType: SnackBarType.error);}}, (userModel) {
-                        ref.read(myUserProvider.notifier).update(userModel);
-                        ref.read(myPhotoProvider.notifier).update(
-                            FirebaseAuth.instance.currentUser!.photoURL);
-                        GoRouter.of(context).refresh();
+                    onPressed: () {
+                      if (!useFirebase) {
+                        showSnackBar(
+                          context: context,
+                          title: 'Firebase disabled for simulator run',
+                          snackBarType: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      ref
+                          .read(authControllerProvider.notifier)
+                          .signInWithGoogle((user) {
+                        user.fold((l) {
+                          if (l != 'Cancelled') {
+                            showSnackBar(
+                                context: context,
+                                title: l,
+                                snackBarType: SnackBarType.error);
+                          }
+                        }, (userModel) {
+                          ref.read(myUserProvider.notifier).update(userModel);
+                          ref.read(myPhotoProvider.notifier).update(
+                              FirebaseAuth.instance.currentUser!.photoURL);
+                          GoRouter.of(context).refresh();
+                        });
                       });
-                    }),
+                    },
                     icon: Image.asset('assets/logo/google_logo.png'),
                   ),
                   const SizedBox(width: 20),
                   GoogleSignButton(
-                      icon: const Icon(
+                      icon: const FaIcon(
                         FontAwesomeIcons.apple,
                         color: Colors.white,
                         size: 40,

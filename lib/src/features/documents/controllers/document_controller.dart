@@ -86,19 +86,20 @@ class DocumentController extends _$DocumentController {
 
   FutureVoid uploadFiles() async {
     String? message;
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    List<PlatformFile> result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowMultiple: true,
       allowedExtensions: ['jpg', 'pdf', 'doc', 'docx', 'png'],
     );
-    if (result == null) return right(null);
-    var files = result.files.filter((t) {
-      if (t.size > 2048 * 1024) {
+    if (result.isEmpty) return right(null);
+    final files = <PlatformFile>[];
+    for (final file in result) {
+      if (await file.length() > 2048 * 1024) {
         message = 'Maximum file size is 2MB';
-        return false;
+        continue;
       }
-      return true;
-    }).toList();
+      files.add(file);
+    }
     if (files.isEmpty) return left(message ?? '');
 
     try {
