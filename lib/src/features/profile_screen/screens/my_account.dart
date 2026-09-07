@@ -37,14 +37,14 @@ class _MyAccountState extends ConsumerState<MyAccount> {
   }
 
   Future<void> openGallery() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    PlatformFile? result = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'png', 'jpeg'],
     );
 
     if (result != null) {
       setState(() {
-        file = File(result.files.single.path!);
+        file = File(result.path!);
         ref.read(profileControllerProvider.notifier).uploadPhoto(file!);
       });
     } else {

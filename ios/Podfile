@@ -1,5 +1,5 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '11.0'
+platform :ios, '15.0'
+require 'fileutils'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -28,7 +28,6 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -38,7 +37,39 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  [
+    'Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h',
+    'Pods/gRPC-C++/src/core/lib/promise/detail/basic_seq.h',
+  ].each do |grpc_basic_seq_path|
+    grpc_basic_seq = File.join(__dir__, grpc_basic_seq_path)
+    next unless File.exist?(grpc_basic_seq)
+
+    FileUtils.chmod('+w', grpc_basic_seq)
+    text = File.read(grpc_basic_seq)
+    File.write(grpc_basic_seq, text.gsub('Traits::template CallSeqFactory', 'Traits::CallSeqFactory'))
+  end
+
+  grpc_modulemap = File.join(__dir__, 'Pods/Target Support Files/gRPC-Core/gRPC-Core.modulemap')
+  grpc_private_dir = File.join(__dir__, 'Pods/Headers/Private/grpc')
+  if File.exist?(grpc_modulemap)
+    FileUtils.mkdir_p(grpc_private_dir)
+    grpc_private_modulemap = File.join(grpc_private_dir, 'gRPC-Core.modulemap')
+    FileUtils.cp(grpc_modulemap, grpc_private_modulemap) unless File.exist?(grpc_private_modulemap) && File.identical?(grpc_modulemap, grpc_private_modulemap)
+  end
+
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+    end
+
+    next unless target.respond_to?(:source_build_phase)
+
+    target.source_build_phase.files.each do |file|
+      flags = file.settings && file.settings['COMPILER_FLAGS']
+      next unless flags
+
+      file.settings['COMPILER_FLAGS'] = flags.split.reject { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }.join(' ')
+    end
   end
 end

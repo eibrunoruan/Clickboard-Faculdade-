@@ -14,6 +14,8 @@ import 'src/features/profile_screen/screens/about_us.dart';
 import 'src/features/profile_screen/screens/my_account.dart';
 part 'route_generator.g.dart';
 
+const bool useFirebase = bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
+
 @riverpod
 GoRouter myGoRouter(MyGoRouterRef ref) {
   return goRouter;
@@ -21,6 +23,12 @@ GoRouter myGoRouter(MyGoRouterRef ref) {
 
 GoRouter goRouter = GoRouter(
   redirect: (context, state) {
+    if (!useFirebase) {
+      return state.matchedLocation.startsWith('/auth')
+          ? state.matchedLocation
+          : state.namedLocation('Login');
+    }
+
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null && !state.fullPath!.startsWith('/auth')) {
       return state.namedLocation('Login');

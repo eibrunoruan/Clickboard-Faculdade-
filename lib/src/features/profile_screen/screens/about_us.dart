@@ -155,7 +155,7 @@ class AboutUs extends ConsumerWidget {
                                               //
                                             }
                                           },
-                                          icon: const Icon(
+                                          icon: const FaIcon(
                                             FontAwesomeIcons.linkedin,
                                             color: AppColors.highlightColDdark,
                                           )),
@@ -174,7 +174,7 @@ class AboutUs extends ConsumerWidget {
                                               //
                                             }
                                           },
-                                          icon: const Icon(
+                                          icon: const FaIcon(
                                             FontAwesomeIcons.instagram,
                                             color: AppColors.highlightColDdark,
                                           )),
@@ -194,7 +194,7 @@ class AboutUs extends ConsumerWidget {
                                               //
                                             }
                                           },
-                                          icon: const Icon(
+                                          icon: const FaIcon(
                                             FontAwesomeIcons.facebook,
                                             color: AppColors.highlightColDdark,
                                           )),
