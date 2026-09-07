@@ -78,7 +78,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     decoration: const InputDecoration(
                         labelText: 'Email',
                         border: OutlineInputBorder(),
-                        hintText: 'ap2513@cse.jgec.ac.in'),
+                        hintText: 'aluno.teste@catolicasc.edu.br'),
                     validator: emailValidate,
                   ),
                 ),

@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../core/utils/utils.dart';
-
 class Student {
   String name, roll, reg, email, uid, session, dept;
   bool isAdmin;
@@ -21,36 +19,23 @@ class Student {
   static String buildRollFromEmailAndDept(String email, String dept) {
     email = email.trim().toLowerCase();
     if (!isCollegeEmail(email)) return 'N/A';
-    String smallRoll = '${email[4]}${email[5]}';
-    int smallRollInt = int.parse(smallRoll);
-    bool lateral = smallRollInt >= 80;
-    int deptCode = departments.indexOf(dept) + 1;
-    int session = int.parse('${email[2]}${email[3]}');
-    int startingSession = lateral ? session - 3 : session - 4;
-    String roll = '${startingSession}10110${deptCode}0$smallRoll';
-    return roll;
+    return 'N/A';
   }
 
   static String buildDeptFromEmail(String email) {
     email = email.trim().toLowerCase();
     if (!isCollegeEmail(email)) return 'Others';
-    String dept = RegExp(r'^[a-z]{2}\d{4}@(cse|ece|it|ee|ce|me)\.jgec\.ac\.in$')
-        .firstMatch(email)!
-        .group(1)!
-        .toUpperCase();
-    return dept;
+    return 'CATOLICASC';
   }
 
   static String buildFullSessionFromEmail(String email) {
     email = email.trim().toLowerCase();
     if (!isCollegeEmail(email)) return 'N/A';
-    int passYear = int.parse('20${email[2]}${email[3]}');
-    int startingYear = passYear - 4;
-    return '$startingYear-$passYear';
+    return 'N/A';
   }
 
   static bool isCollegeEmail(String email) =>
-      RegExp(r'^[a-zA-Z]{2}\d{4}@(cse|ece|it|ee|ce|me)\.jgec\.ac\.in$')
+      RegExp(r'^[a-zA-Z0-9._%+-]+@catolicasc\.edu\.br$')
           .hasMatch(email.trim().toLowerCase());
 
   Map<String, dynamic> toJSON() {

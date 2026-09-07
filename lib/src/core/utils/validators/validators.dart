@@ -22,7 +22,7 @@ String? nameValidate(String? value) {
 
 String? emailValidate(String? value) {
   if (value == '') return 'Campo obrigatório';
-  if (RegExp(r'^[a-zA-Z]{2}\d{4}@(cse|ece|it|ee|ce|me)\.jgec\.ac\.in$')
+  if (RegExp(r'^[a-zA-Z0-9._%+-]+@catolicasc\.edu\.br$')
       .hasMatch((value ?? '').trim().toLowerCase())) {
     return null;
   }
