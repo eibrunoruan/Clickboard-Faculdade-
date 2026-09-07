@@ -33,6 +33,10 @@ class AuthenticationRepository {
   FutureEither<Student> createUserWithEmailAndPassword(Student student) async {
     UserCredential userCredential;
     try {
+      if (!Student.isCollegeEmail(student.email)) {
+        return left('Please use your college email ID');
+      }
+
       userCredential = await _auth.createUserWithEmailAndPassword(
           email: student.email, password: student.pass!);
       student.uid = userCredential.user!.uid;
@@ -58,6 +62,15 @@ class AuthenticationRepository {
           await FirebaseAuth.instance.signInWithCredential(credential);
 
       User user = userCredential.user!;
+      if (!Student.isCollegeEmail(user.email ?? '')) {
+        if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+          await user.delete();
+        }
+        await GoogleSignIn().signOut();
+        await _auth.signOut();
+        return left('Please use your college email ID');
+      }
+
       Student student;
       if (userCredential.additionalUserInfo?.isNewUser ?? true) {
         student = Student.fromEmail(

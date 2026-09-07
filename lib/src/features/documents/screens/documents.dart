@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../core/common_widgets/my_app_bar.dart';
 import '../../../models/document_model.dart';
+import '../../../providers/utils_providers.dart';
 import '../controllers/document_controller.dart';
 
 class DocumentScreen extends ConsumerStatefulWidget {
@@ -19,47 +20,52 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
   Widget build(BuildContext context) {
     var documentsFuture = ref.watch(documentFutureProvider());
     List<Document> documents = ref.watch(documentControllerProvider);
+    final isAdmin = ref.watch(myUserProvider)?.isAdmin ?? false;
     return Scaffold(
       appBar: myAppBar(context: context, title: 'Clickboard'),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          if(documents.length>=5){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Limit Reached")));
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: () async {
+                if (documents.length >= 5) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Limit Reached")));
+                } else {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      return const Dialog(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(width: 20),
+                              Text(
+                                "Loading...",
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
 
-          }
-          else {
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (BuildContext context) {
-                return const Dialog(
-                  child: Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(width: 20),
-                        Text("Loading...",
-                          style: TextStyle(color: Colors.black),),
-                      ],
-                    ),
-                  ),
-                );
+                  try {
+                    await ref
+                        .read(documentControllerProvider.notifier)
+                        .uploadFiles();
+                  } finally {
+                    Navigator.pop(context);
+                  }
+                }
               },
-            );
-
-            try {
-              await ref.read(documentControllerProvider.notifier).uploadFiles();
-            } finally {
-              Navigator.pop(context);
-            }
-
-          }
-        },
-        tooltip: 'Add a new document',
-        child: const Icon(Icons.add),
-      ),
+              tooltip: 'Add a new document',
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () =>
             ref.watch(documentFutureProvider(isRefreshed: true).future),
@@ -112,8 +118,8 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                 data: (data) {
                   documents = documents
                       .filter((t) => t.name
-                      .toLowerCase()
-                      .contains(searchString.toLowerCase()))
+                          .toLowerCase()
+                          .contains(searchString.toLowerCase()))
                       .toList();
                   if (documents.isEmpty) {
                     return const SliverToBoxAdapter(
@@ -132,15 +138,14 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                     gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                         childAspectRatio: 0.9,
                         maxCrossAxisExtent:
-                        MediaQuery.sizeOf(context).width - 50),
+                            MediaQuery.sizeOf(context).width - 50),
                   );
                 },
                 error: (error, stackTrace) {
                   return const Center(child: Text('Error'));
                 },
                 loading: () => const SliverToBoxAdapter(
-                    child: Center(child: CircularProgressIndicator()))
-            ),
+                    child: Center(child: CircularProgressIndicator()))),
           ],
         ),
       ),

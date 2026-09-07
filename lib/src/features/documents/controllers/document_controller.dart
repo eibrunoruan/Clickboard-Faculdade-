@@ -26,6 +26,24 @@ Future<void> documentFuture(DocumentFutureRef ref, {bool isRefreshed = false}) {
 class DocumentController extends _$DocumentController {
   Reference _documentRef() => FirebaseStorage.instance.ref(
       '${ref.read(myUserProvider)?.dept ?? ''}/${ref.read(myUserProvider)?.session ?? ''}/${ref.read(myUserProvider)?.roll ?? ''}/Documents/');
+
+  bool get _isAdmin => ref.read(myUserProvider)?.isAdmin ?? false;
+
+  String? _safeDocumentName(Document document, String newName) {
+    final trimmedName = newName.trim();
+    if (trimmedName.isEmpty ||
+        trimmedName.length > 120 ||
+        trimmedName.contains('/') ||
+        trimmedName.contains('\\')) {
+      return null;
+    }
+
+    if (trimmedName.contains('.')) return trimmedName;
+
+    final originalExtension = document.name.split('.').last;
+    return '$trimmedName.$originalExtension';
+  }
+
   @override
   List<Document> build() {
     return [];
@@ -64,6 +82,8 @@ class DocumentController extends _$DocumentController {
   }
 
   FutureVoid deleteDocument(Document document) async {
+    if (!_isAdmin) return left('Only coordination can delete documents');
+
     try {
       await DocumentRepository.deleteDocument(document);
       await getAllDocuments(isRefreshed: true);
@@ -75,8 +95,13 @@ class DocumentController extends _$DocumentController {
 
   FutureVoid renameDocument(Document document,
       {required String newName}) async {
+    if (!_isAdmin) return left('Only coordination can rename documents');
+
     try {
-      await DocumentRepository.renameDocument(document, newName);
+      final safeName = _safeDocumentName(document, newName);
+      if (safeName == null) return left('Please enter a valid document name');
+
+      await DocumentRepository.renameDocument(document, safeName);
       await getAllDocuments(isRefreshed: true);
       return right(null);
     } catch (e) {
@@ -85,6 +110,8 @@ class DocumentController extends _$DocumentController {
   }
 
   FutureVoid uploadFiles() async {
+    if (!_isAdmin) return left('Only coordination can upload documents');
+
     String? message;
     List<PlatformFile> result = await FilePicker.pickFiles(
       type: FileType.custom,

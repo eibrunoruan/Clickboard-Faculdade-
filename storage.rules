@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isCoordination() {
+      return isSignedIn()
+        && firestore.exists(/databases/(default)/documents/Users/$(request.auth.uid))
+        && (
+          firestore.get(/databases/(default)/documents/Users/$(request.auth.uid)).data.isAdmin == true
+          || firestore.get(/databases/(default)/documents/Users/$(request.auth.uid)).data.isAdmin == 'true'
+        );
+    }
+
+    match /Profile/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isCoordination();
+    }
+  }
+}
