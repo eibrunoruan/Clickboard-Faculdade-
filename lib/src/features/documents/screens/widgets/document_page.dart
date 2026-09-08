@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 
 import '../../../../core/utils/utils.dart';
+import '../../../../providers/utils_providers.dart';
 import '../../controllers/document_controller.dart';
 
 class DocumentPage extends ConsumerStatefulWidget {
@@ -38,22 +39,22 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.black54,
-          title: const Text('Rename Document'),
+          title: const Text('Renomear documento'),
           content: TextField(
             controller: renameController,
             decoration: const InputDecoration(
-                hintText: 'Enter new name',
+                hintText: 'Informe o novo nome',
                 hintStyle: TextStyle(color: Colors.white30)),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Rename'),
+              child: const Text('Renomear'),
               onPressed: () {
                 if (renameController.text.isNotEmpty) {
                   ref
@@ -69,7 +70,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                             snackBarType: SnackBarType.error), (r) {
                       showSnackBar(
                           context: context,
-                          title: 'File renamed',
+                          title: 'Arquivo renomeado',
                           snackBarType: SnackBarType.good);
                     });
                   });
@@ -110,6 +111,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
   Widget build(BuildContext context) {
     Icon documentIcon =
         _getIconForDocumentType(".${widget.document.name.split('.').last}");
+    final isAdmin = ref.watch(myUserProvider)?.isAdmin ?? false;
 
     return GestureDetector(
       onTap: () {
@@ -134,7 +136,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                         iconColor: Colors.greenAccent,
                         textColor: Colors.greenAccent,
                         splashColor: Colors.blueGrey,
-                        title: const Text('Download'),
+                        title: const Text('Baixar'),
                         trailing: const Icon(Icons.download_rounded),
                         onTap: () async {
                           showDialog(
@@ -150,7 +152,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                       CircularProgressIndicator(),
                                       SizedBox(width: 20),
                                       Text(
-                                        "Downloading...",
+                                        "Baixando...",
                                         style: TextStyle(color: Colors.black),
                                       ),
                                     ],
@@ -181,71 +183,72 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                           }
                         },
                       ),
-                      const Divider(),
-                      ListTile(
-                        iconColor: Colors.blueAccent,
-                        textColor: Colors.blueAccent,
-                        splashColor: Colors.blueGrey,
-                        trailing:
-                            const Icon(Icons.drive_file_rename_outline_rounded),
-                        title: const Text('Rename'),
-                        onTap: () {
-                          _showRenameDialog(context, ref, widget.document);
-                        },
-                      ),
-                      const Divider(),
-                      ListTile(
-                        iconColor: Colors.redAccent,
-                        splashColor: Colors.blueGrey,
-                        textColor: Colors.redAccent,
-                        title: const Text('Delete'),
-                        trailing: const Icon(Icons.delete_forever_rounded),
-                        onTap: () async {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: true,
-                            builder: (BuildContext context) {
-                              return const Dialog(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(),
-                                      SizedBox(width: 20),
-                                      Text(
-                                        "Deleting...",
-                                        style: TextStyle(color: Colors.black),
-                                      ),
-                                    ],
+                      if (isAdmin) ...[
+                        const Divider(),
+                        ListTile(
+                          iconColor: Colors.blueAccent,
+                          textColor: Colors.blueAccent,
+                          splashColor: Colors.blueGrey,
+                          trailing: const Icon(
+                              Icons.drive_file_rename_outline_rounded),
+                          title: const Text('Renomear'),
+                          onTap: () {
+                            _showRenameDialog(context, ref, widget.document);
+                          },
+                        ),
+                        const Divider(),
+                        ListTile(
+                          iconColor: Colors.redAccent,
+                          splashColor: Colors.blueGrey,
+                          textColor: Colors.redAccent,
+                          title: const Text('Apagar'),
+                          trailing: const Icon(Icons.delete_forever_rounded),
+                          onTap: () async {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) {
+                                return const Dialog(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(width: 20),
+                                        Text(
+                                          "Apagando...",
+                                          style: TextStyle(color: Colors.black),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          );
-                          try {
-                            await ref
-                                .read(documentControllerProvider.notifier)
-                                .deleteDocument(widget.document)
-                                .then((path) {
-                              context.pop();
-                              path.fold(
-                                  (l) => showSnackBar(
+                                );
+                              },
+                            );
+                            try {
+                              await ref
+                                  .read(documentControllerProvider.notifier)
+                                  .deleteDocument(widget.document)
+                                  .then((path) {
+                                context.pop();
+                                path.fold(
+                                    (l) => showSnackBar(
+                                        context: context,
+                                        title: l,
+                                        snackBarType: SnackBarType.error), (r) {
+                                  showSnackBar(
                                       context: context,
-                                      title: l,
-                                      snackBarType: SnackBarType.error), (r) {
-                                showSnackBar(
-                                    context: context,
-                                    title: 'File deleted',
-                                    snackBarType: SnackBarType.good);
+                                      title: 'Arquivo apagado',
+                                      snackBarType: SnackBarType.good);
+                                });
                               });
-                            });
-                            
-                          }finally {
-                            Navigator.pop(context);
-                          }
-                        },
-                      ),
+                            } finally {
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 );

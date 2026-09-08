@@ -30,9 +30,35 @@ class AuthenticationRepository {
         .map((event) => Student.fromSnapshot(event));
   }
 
+  FutureEither<Student> _getExistingStudent(String uid) async {
+    final snapshot = await _users.doc(uid).get();
+    if (!snapshot.exists) {
+      return left(
+          'Login autenticado, mas o perfil do aluno não existe no Firestore.');
+    }
+    return right(Student.fromSnapshot(snapshot));
+  }
+
+  String _firestoreProfileFailureMessage(FirebaseException e) {
+    switch (e.code) {
+      case 'permission-denied':
+        return 'Login autenticado, mas o Firestore negou acesso ao perfil do aluno. Verifique as regras ou habilite o Cloud Firestore no Firebase.';
+      case 'unavailable':
+        return 'Login autenticado, mas o Cloud Firestore está indisponível ou desativado no projeto Firebase.';
+      case 'not-found':
+        return 'Login autenticado, mas o banco ou perfil do aluno não foi encontrado no Firestore.';
+      default:
+        return 'Login autenticado, mas não foi possível carregar o perfil do aluno no Firestore: ${e.message ?? e.code}';
+    }
+  }
+
   FutureEither<Student> createUserWithEmailAndPassword(Student student) async {
     UserCredential userCredential;
     try {
+      if (!Student.isCollegeEmail(student.email)) {
+        return left('Use um e-mail institucional @catolicasc.edu.br');
+      }
+
       userCredential = await _auth.createUserWithEmailAndPassword(
           email: student.email, password: student.pass!);
       student.uid = userCredential.user!.uid;
@@ -58,6 +84,15 @@ class AuthenticationRepository {
           await FirebaseAuth.instance.signInWithCredential(credential);
 
       User user = userCredential.user!;
+      if (!Student.isCollegeEmail(user.email ?? '')) {
+        if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+          await user.delete();
+        }
+        await GoogleSignIn().signOut();
+        await _auth.signOut();
+        return left('Use um e-mail institucional @catolicasc.edu.br');
+      }
+
       Student student;
       if (userCredential.additionalUserInfo?.isNewUser ?? true) {
         student = Student.fromEmail(
@@ -68,14 +103,17 @@ class AuthenticationRepository {
             uid: user.uid);
         await _users.doc(student.uid).set(student.toJSON());
       } else {
-        student = await getUserData(userCredential.user!.uid).first;
+        final existingStudent = await _getExistingStudent(user.uid);
+        return existingStudent;
       }
       return right(student);
     } on FirebaseAuthException catch (e) {
       final ex = SignupWithEmailAndPasswordFailure.code(e.code);
       return left(ex.message);
+    } on FirebaseException catch (e) {
+      return left(_firestoreProfileFailureMessage(e));
     } catch (e) {
-      return left('Cancelled');
+      return left('Cancelado');
     }
   }
 
@@ -83,13 +121,16 @@ class AuthenticationRepository {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
-      Student userModel = await getUserData(userCredential.user!.uid).first;
-      return right(userModel);
+      final existingStudent =
+          await _getExistingStudent(userCredential.user!.uid);
+      return existingStudent;
     } on FirebaseAuthException catch (e) {
       final ex = SignupWithEmailAndPasswordFailure.code(e.code);
       return left(ex.message);
+    } on FirebaseException catch (e) {
+      return left(_firestoreProfileFailureMessage(e));
     } catch (e) {
-      return left(e.toString());
+      return left('Não foi possível carregar o perfil do aluno: $e');
     }
   }
 

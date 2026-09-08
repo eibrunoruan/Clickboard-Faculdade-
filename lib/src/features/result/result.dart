@@ -94,7 +94,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
                   );
                 },
                 error: (error, stackTrace) {
-                  return const Center(child: Text('Error'));
+                  return const Center(child: Text('Erro'));
                 },
                 loading: () => const SliverToBoxAdapter(
                     child: Center(child: CircularProgressIndicator()))),

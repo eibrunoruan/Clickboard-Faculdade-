@@ -35,7 +35,7 @@ class ProfileController extends StateNotifier<bool> {
       _ref.read(myUserProvider.notifier).update(newStudent);
     } catch (e) {
       state = false;
-      return left('Could not update profile');
+      return left('Não foi possível atualizar o perfil');
     }
     state = false;
     return right(null);
@@ -57,9 +57,9 @@ class ProfileController extends StateNotifier<bool> {
     state = true;
     try {
       await _userProfileRepository.deletePhoto();
-    } catch (e){//
-    }
-    finally {
+    } catch (e) {
+      //
+    } finally {
       _ref.read(myPhotoProvider.notifier).update(null);
       state = false;
     }

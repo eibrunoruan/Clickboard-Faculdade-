@@ -57,7 +57,8 @@ class LoginPage extends ConsumerWidget {
                       if (!useFirebase) {
                         showSnackBar(
                           context: context,
-                          title: 'Firebase disabled for simulator run',
+                          title:
+                              'Firebase desativado para execução no simulador',
                           snackBarType: SnackBarType.error,
                         );
                         return;
@@ -67,7 +68,7 @@ class LoginPage extends ConsumerWidget {
                           .read(authControllerProvider.notifier)
                           .signInWithGoogle((user) {
                         user.fold((l) {
-                          if (l != 'Cancelled') {
+                          if (l != 'Cancelado') {
                             showSnackBar(
                                 context: context,
                                 title: l,

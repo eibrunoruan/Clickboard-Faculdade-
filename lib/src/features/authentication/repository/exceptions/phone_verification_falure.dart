@@ -1,12 +1,12 @@
 class PhoneVerificationFailure {
   final String message;
-  const PhoneVerificationFailure([this.message = "An Error Occured"]);
+  const PhoneVerificationFailure([this.message = "Ocorreu um erro"]);
 
   factory PhoneVerificationFailure.code(String code) {
     switch (code) {
       case 'invalid-phone-number':
         return const PhoneVerificationFailure(
-            "Please enter a valid phone number.");
+            "Informe um número de telefone válido.");
       // case 'invalid-email':
       //   return const PhoneVerificationFailure(
       //       "Email is not valid or badly formatted.");

@@ -12,31 +12,27 @@ String? regValidate(String? value) {
     return null;
   }
   if (value == '') return null;
-  return "Please enter a valid registration number";
+  return "Informe um número de matrícula válido";
 }
 
 String? nameValidate(String? value) {
-  if (value == '') return 'Cannot be empty!';
+  if (value == '') return 'Campo obrigatório';
   return null;
 }
 
 String? emailValidate(String? value) {
-  if (RegExp(r'^[.a-zA-Z0-9]+@([a-z]*\.+)*?[a-z]{2,3}$').hasMatch(value ?? '')) {
-    if (RegExp(r'^[a-zA-Z0-9]*@(cse|ece|it|ee|ce|me).jgec.ac.in$')
-        .hasMatch(value ?? '')) {
-      return null;
-    }
+  if (value == '') return 'Campo obrigatório';
+  if (RegExp(r'^[a-zA-Z0-9._%+-]+@catolicasc\.edu\.br$')
+      .hasMatch((value ?? '').trim().toLowerCase())) {
     return null;
-    // return 'Must use your college mail ID';
   }
-  if (value == '') return 'Cannot be empty!';
-  return 'Invalid email';
+  return 'Use um e-mail @catolicasc.edu.br';
 }
 
 String? passValidate(String? value) {
-  if (value == '') return 'Cannot be empty!';
+  if (value == '') return 'Campo obrigatório';
   if ((value?.length ?? 0) < 6) {
-    return 'Password length must be atleast 6';
+    return 'A senha deve ter pelo menos 6 caracteres';
   }
   return null;
 }

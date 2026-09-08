@@ -27,7 +27,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   String? pass;
 
-    void deleteUser() async {
+  void deleteUser() async {
     FirebaseAuth auth = FirebaseAuth.instance;
     User? currentUser = auth.currentUser;
 
@@ -38,11 +38,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (providerIds.contains('password')) {
         showMyAdaptiveDialog(
           context: context,
-          title: const Text('Are you sure ?'),
+          title: const Text('Tem certeza?'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('All of your data will be deleted.'),
+              const Text('Todos os seus dados serão apagados.'),
               Form(
                 key: _formKey,
                 child: MyTextField(
@@ -61,19 +61,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () {
                   context.pop();
                 },
-                child: const Text('Cancel')),
+                child: const Text('Cancelar')),
             OutlinedButton(
-                onPressed: deleteUserForEmailLogin, child: const Text('Delete Account'))
+                onPressed: deleteUserForEmailLogin,
+                child: const Text('Apagar conta'))
           ],
         );
       } else if (providerIds.contains('google.com')) {
         showMyAdaptiveDialog(
           context: context,
-          title: const Text('Are you sure ?'),
+          title: const Text('Tem certeza?'),
           content: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('All of your data will be deleted.'),
+              Text('Todos os seus dados serão apagados.'),
             ],
           ),
           actions: [
@@ -81,10 +82,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () {
                   context.pop();
                 },
-                child: const Text('Cancel')),
+                child: const Text('Cancelar')),
             OutlinedButton(
                 onPressed: deleteUserForGoogleLogin,
-                child: const Text('Delete Account'))
+                child: const Text('Apagar conta'))
           ],
         );
       }
@@ -109,7 +110,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
       await user.reauthenticateWithCredential(credential);
       await ref.read(profileControllerProvider.notifier).deletePhoto();
-      ref.read(authControllerProvider.notifier).logout(() { 
+      ref.read(authControllerProvider.notifier).logout(() {
         ref.read(myGoRouterProvider).refresh();
       });
       await user.delete();
@@ -127,7 +128,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   context: context,
                   title: l,
                   snackBarType: SnackBarType.error), (r) async {
-                    await ref.read(profileControllerProvider.notifier).deletePhoto();
+            await ref.read(profileControllerProvider.notifier).deletePhoto();
             ref
                 .read(authControllerProvider.notifier)
                 .deactivate(ref.read(myGoRouterProvider).refresh)
@@ -239,7 +240,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 AccountListTile(
                   leadingIcon: Icons.delete,
-                  title: 'Delete Account',
+                  title: 'Apagar conta',
                   nextDisabled: true,
                   onPress: deleteUser,
                   color: Theme.of(context).colorScheme.error,

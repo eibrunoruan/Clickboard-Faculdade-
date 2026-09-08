@@ -77,7 +77,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 if (!useFirebase) {
                   showSnackBar(
                     context: context,
-                    title: 'Firebase disabled for simulator run',
+                    title: 'Firebase desativado para execução no simulador',
                     snackBarType: SnackBarType.error,
                   );
                   return;
@@ -114,7 +114,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   if (!useFirebase) {
                     showSnackBar(
                       context: context,
-                      title: 'Firebase disabled for simulator run',
+                      title: 'Firebase desativado para execução no simulador',
                       snackBarType: SnackBarType.error,
                     );
                     return;
