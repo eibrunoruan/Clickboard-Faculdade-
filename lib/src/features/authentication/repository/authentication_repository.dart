@@ -39,6 +39,19 @@ class AuthenticationRepository {
     return right(Student.fromSnapshot(snapshot));
   }
 
+  String _firestoreProfileFailureMessage(FirebaseException e) {
+    switch (e.code) {
+      case 'permission-denied':
+        return 'Login autenticado, mas o Firestore negou acesso ao perfil do aluno. Verifique as regras ou habilite o Cloud Firestore no Firebase.';
+      case 'unavailable':
+        return 'Login autenticado, mas o Cloud Firestore está indisponível ou desativado no projeto Firebase.';
+      case 'not-found':
+        return 'Login autenticado, mas o banco ou perfil do aluno não foi encontrado no Firestore.';
+      default:
+        return 'Login autenticado, mas não foi possível carregar o perfil do aluno no Firestore: ${e.message ?? e.code}';
+    }
+  }
+
   FutureEither<Student> createUserWithEmailAndPassword(Student student) async {
     UserCredential userCredential;
     try {
@@ -97,6 +110,8 @@ class AuthenticationRepository {
     } on FirebaseAuthException catch (e) {
       final ex = SignupWithEmailAndPasswordFailure.code(e.code);
       return left(ex.message);
+    } on FirebaseException catch (e) {
+      return left(_firestoreProfileFailureMessage(e));
     } catch (e) {
       return left('Cancelado');
     }
@@ -112,6 +127,8 @@ class AuthenticationRepository {
     } on FirebaseAuthException catch (e) {
       final ex = SignupWithEmailAndPasswordFailure.code(e.code);
       return left(ex.message);
+    } on FirebaseException catch (e) {
+      return left(_firestoreProfileFailureMessage(e));
     } catch (e) {
       return left('Não foi possível carregar o perfil do aluno: $e');
     }
