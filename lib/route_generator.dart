@@ -14,7 +14,8 @@ import 'src/features/profile_screen/screens/about_us.dart';
 import 'src/features/profile_screen/screens/my_account.dart';
 part 'route_generator.g.dart';
 
-const bool useFirebase = bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
+const bool useFirebase =
+    bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
 
 @riverpod
 GoRouter myGoRouter(MyGoRouterRef ref) {
@@ -34,13 +35,9 @@ GoRouter goRouter = GoRouter(
       return state.namedLocation('Login');
     }
     if (user != null) {
-      if (user.emailVerified) {
-        if (state.matchedLocation.startsWith('/auth')) return '/';
-        if (state.matchedLocation.startsWith('/app/verify-email')) return '/';
-        return state.matchedLocation;
-      } else {
-        return '/app/verify-email';
-      }
+      if (state.matchedLocation.startsWith('/auth')) return '/';
+      if (state.matchedLocation.startsWith('/app/verify-email')) return '/';
+      return state.matchedLocation;
     }
     return state.matchedLocation;
   },
@@ -145,7 +142,8 @@ GoRouter goRouter = GoRouter(
     GoRoute(
       name: 'Take Picture',
       path: '/app/take-picture',
-      pageBuilder: (context, state) => const MaterialPage(child: TakePictureScreen()),
+      pageBuilder: (context, state) =>
+          const MaterialPage(child: TakePictureScreen()),
     ),
   ],
 );

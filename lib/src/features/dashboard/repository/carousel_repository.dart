@@ -1,21 +1,19 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
-class CarouselRepository {
-  final Reference _carouselRef;
+import '../../../providers/supabase_storage_service.dart';
 
-  CarouselRepository(
-      {required FirebaseStorage firebaseStorage})
-      : _carouselRef = firebaseStorage.ref('Carousel');
+class CarouselRepository {
+  final SupabaseStorageService _storageService;
+
+  CarouselRepository({SupabaseStorageService? storageService})
+      : _storageService = storageService ?? SupabaseStorageService();
   Future<List<Image>> getAllImages() async {
     List<Image> images = [];
     try {
-      ListResult imagesResult = await _carouselRef.listAll();
-      for (var fileRef in imagesResult.items) {
-        String url = await fileRef.getDownloadURL();
-        await fileRef
-            .getMetadata()
-            .then((value) async => images.add(Image.network(url,fit: BoxFit.cover,)));
+      final imageFiles = await _storageService.list('Carousel');
+      for (var file in imageFiles) {
+        final url = await _storageService.signedUrl(file.path);
+        images.add(Image.network(url, fit: BoxFit.cover));
       }
     } catch (e) {
       print('Error fetching carousels');

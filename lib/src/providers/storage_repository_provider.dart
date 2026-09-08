@@ -1,23 +1,23 @@
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
+import 'supabase_storage_service.dart';
 import 'type_defs.dart';
 
 final storageRepositoryProvider = Provider(
   (ref) => StorageRepository(
-    firebaseStorage: FirebaseStorage.instance,
+    storageService: SupabaseStorageService(),
   ),
 );
 
 class StorageRepository {
-  final FirebaseStorage _firebaseStorage;
+  final SupabaseStorageService _storageService;
 
-  StorageRepository({required FirebaseStorage firebaseStorage})
-      : _firebaseStorage = firebaseStorage;
+  StorageRepository({required SupabaseStorageService storageService})
+      : _storageService = storageService;
 
   FutureEither<String> storeFile({
     required String path,
@@ -26,18 +26,15 @@ class StorageRepository {
     required Uint8List? webFile,
   }) async {
     try {
-      final ref = _firebaseStorage.ref().child(path).child(id);
-      UploadTask uploadTask;
-
       if (kIsWeb) {
-        uploadTask = ref.putData(webFile!);
+        return right(await _storageService.uploadBytes(
+          folder: path,
+          fileName: id,
+          bytes: webFile!,
+        ));
       } else {
-        uploadTask = ref.putFile(file!);
+        return right(await _storageService.uploadFile(path, id, file!));
       }
-
-      final snapshot = await uploadTask;
-
-      return right(await snapshot.ref.getDownloadURL());
     } catch (e) {
       return left(e.toString());
     }

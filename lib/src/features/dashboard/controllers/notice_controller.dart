@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,7 +27,6 @@ class NoticeController extends _$NoticeController {
 
   init() {
     _noticeRepository = NoticeRepository(
-        firebaseStorage: FirebaseStorage.instance,
         department: ref.read(myUserProvider)?.dept ?? '',
         session: ref.read(myUserProvider)?.session ?? '');
   }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,8 +23,8 @@ Future<void> documentFuture(DocumentFutureRef ref, {bool isRefreshed = false}) {
 
 @Riverpod(keepAlive: true)
 class DocumentController extends _$DocumentController {
-  Reference _documentRef() => FirebaseStorage.instance.ref(
-      '${ref.read(myUserProvider)?.dept ?? ''}/${ref.read(myUserProvider)?.session ?? ''}/${ref.read(myUserProvider)?.roll ?? ''}/Documents/');
+  String _documentFolder() =>
+      '${ref.read(myUserProvider)?.dept ?? ''}/${ref.read(myUserProvider)?.session ?? ''}/${ref.read(myUserProvider)?.roll ?? ''}/Documents';
 
   bool get _isAdmin => ref.read(myUserProvider)?.isAdmin ?? false;
 
@@ -51,16 +50,16 @@ class DocumentController extends _$DocumentController {
 
   Future<void> getAllDocuments({bool isRefreshed = false}) async {
     if (!isRefreshed && state.isNotEmpty) return;
-    state = await DocumentRepository.getAllDocuments(_documentRef());
+    state = await DocumentRepository.getAllDocuments(_documentFolder());
   }
 
   FutureEither<String> saveDocumentFile(Document document) async {
     final appDocDir = (await getTemporaryDirectory()).path;
     final filePath =
-        '$appDocDir/${document.ref.name}'; // Path : /data/user/0/com.example.jgec_notice/cache/
+        '$appDocDir/${document.name}'; // Path : /data/user/0/com.example.jgec_notice/cache/
     final file = File(filePath);
     try {
-      await document.ref.writeToFile(file);
+      await DocumentRepository.writeToFile(document, file);
     } catch (e) {
       return left(e.toString());
     }
@@ -69,10 +68,10 @@ class DocumentController extends _$DocumentController {
 
   FutureEither<String> downloadDocument(Document doc) async {
     String filePath = (await getDownloadPath())!;
-    final file = File('$filePath/${doc.ref.name}');
+    final file = File('$filePath/${doc.name}');
     try {
       if (await Permission.manageExternalStorage.request().isGranted) {
-        await doc.ref.writeToFile(file);
+        await DocumentRepository.writeToFile(doc, file);
         return right(filePath);
       }
     } catch (e) {
@@ -135,7 +134,7 @@ class DocumentController extends _$DocumentController {
 
     try {
       for (var file in files) {
-        await DocumentRepository.uploadFile(_documentRef(), file);
+        await DocumentRepository.uploadFile(_documentFolder(), file);
       }
       await getAllDocuments(isRefreshed: true);
       return right(null);

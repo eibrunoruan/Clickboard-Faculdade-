@@ -1,4 +1,3 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,7 +7,9 @@ part 'carousel_controller.g.dart';
 
 @riverpod
 Future<void> carouselFuture(CarouselFutureRef ref, {bool isRefreshed = false}) {
-  return ref.watch(carouselControllerProvider.notifier).getAllImages(isRefreshed: isRefreshed);
+  return ref
+      .watch(carouselControllerProvider.notifier)
+      .getAllImages(isRefreshed: isRefreshed);
 }
 
 @Riverpod(keepAlive: true)
@@ -22,9 +23,7 @@ class CarouselController extends _$CarouselController {
   }
 
   init() {
-    _carouselRepository = CarouselRepository(
-      firebaseStorage: FirebaseStorage.instance,
-    );
+    _carouselRepository = CarouselRepository();
   }
 
   Future<void> getAllImages({bool isRefreshed = false}) async {

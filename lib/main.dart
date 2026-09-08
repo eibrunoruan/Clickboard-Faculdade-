@@ -3,20 +3,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 import 'src/features/authentication/controllers/authentication_controller.dart';
 import 'src/models/student_model.dart';
+import 'src/providers/supabase_storage_service.dart';
 import 'src/providers/utils_providers.dart';
 import '/route_generator.dart';
 import 'src/core/utils/theme/theme.dart';
 import 'firebase_options.dart';
 
-const bool useFirebase = bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
+const bool useFirebase =
+    bool.fromEnvironment('USE_FIREBASE', defaultValue: true);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: supabaseUrl,
+    publishableKey: supabasePublishableKey,
+  );
   if (useFirebase) {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
     await FirebaseMessagingApi().initNotifications();
   }
   runApp(const ProviderScope(child: MyApp()));

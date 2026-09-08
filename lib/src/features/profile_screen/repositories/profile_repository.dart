@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mime/mime.dart';
 
 import '../../../core/constants/firebase_constants.dart';
 import '../../../models/student_model.dart';
+import '../../../providers/supabase_storage_service.dart';
 
 final userProfileRepositoryProvider = Provider((ref) {
   return ProfileRepository(firestore: FirebaseFirestore.instance);
@@ -15,24 +14,31 @@ final userProfileRepositoryProvider = Provider((ref) {
 
 class ProfileRepository {
   final FirebaseFirestore _firestore;
+  final SupabaseStorageService _storageService;
   ProfileRepository({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+      : _firestore = firestore,
+        _storageService = SupabaseStorageService();
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
 
   Future<void> uploadPhoto(File file) async {
-    Reference storageRef = FirebaseStorage.instance.ref('Profile');
-    final fileRef = storageRef.child(FirebaseAuth.instance.currentUser!.uid);
-    await fileRef.putFile(
-        file, SettableMetadata(contentType: lookupMimeType(file.path)));
-    await FirebaseAuth.instance.currentUser
-        ?.updatePhotoURL(await fileRef.getDownloadURL());
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final extension = file.path.split('.').last;
+    final url = await _storageService.uploadFile(
+      'Profile',
+      '$uid.$extension',
+      file,
+    );
+    await FirebaseAuth.instance.currentUser?.updatePhotoURL(url);
   }
 
   Future<void> deletePhoto() async {
-    Reference storageRef = FirebaseStorage.instance.ref('Profile');
-    final fileRef = storageRef.child(FirebaseAuth.instance.currentUser!.uid);
-    await fileRef.delete();
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final files = await _storageService.list('Profile');
+    final userFiles = files.where((file) => file.name.split('.').first == uid);
+    for (final file in userFiles) {
+      await _storageService.delete(file.path);
+    }
     await FirebaseAuth.instance.currentUser?.updatePhotoURL(null);
   }
 

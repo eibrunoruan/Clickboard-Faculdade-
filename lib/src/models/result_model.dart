@@ -1,11 +1,11 @@
-import 'package:firebase_storage/firebase_storage.dart';
+import '../providers/supabase_storage_service.dart';
 
 class Result {
   final String name;
   final int sem;
   final DateTime? timeCreated;
-  final Reference ref;
+  final SupabaseStorageObject file;
 
-  Result({required this.sem, required this.ref, this.timeCreated})
+  Result({required this.sem, required this.file, this.timeCreated})
       : name = 'Semester $sem';
 }

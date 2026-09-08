@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -23,8 +22,8 @@ Future<void> resultFuture(ResultFutureRef ref, {bool isRefreshed = false}) {
 
 @Riverpod(keepAlive: true)
 class ResultController extends _$ResultController {
-  Reference _resultRef() => FirebaseStorage.instance.ref(
-      '${ref.read(myUserProvider)?.dept ?? ''}/${ref.read(myUserProvider)?.session ?? ''}/${ref.read(myUserProvider)?.roll ?? ''}/Results/');
+  String _resultFolder() =>
+      '${ref.read(myUserProvider)?.dept ?? ''}/${ref.read(myUserProvider)?.session ?? ''}/${ref.read(myUserProvider)?.roll ?? ''}/Results';
   @override
   List<Result> build() {
     return [];
@@ -32,16 +31,16 @@ class ResultController extends _$ResultController {
 
   Future<void> getAllResults({bool isRefreshed = false}) async {
     if (!isRefreshed && state.isNotEmpty) return;
-    state = await ResultRepository.getAllResults(_resultRef());
+    state = await ResultRepository.getAllResults(_resultFolder());
   }
 
   FutureEither<String> saveResultFile(Result result) async {
     final appDocDir = (await getTemporaryDirectory()).path;
     final filePath =
-        '$appDocDir/${result.ref.name}'; // Path : /data/user/0/com.example.jgec_notice/cache/
+        '$appDocDir/${result.file.name}'; // Path : /data/user/0/com.example.jgec_notice/cache/
     final file = File(filePath);
     try {
-      await result.ref.writeToFile(file);
+      await file.writeAsBytes(await ResultRepository.download(result));
     } catch (e) {
       return left(e.toString());
     }
@@ -50,10 +49,10 @@ class ResultController extends _$ResultController {
 
   FutureEither<String> downloadResult(Result doc) async {
     String filePath = (await getDownloadPath())!;
-    final file = File('$filePath/${doc.ref.name}');
+    final file = File('$filePath/${doc.file.name}');
     try {
       if (await Permission.manageExternalStorage.request().isGranted) {
-        await doc.ref.writeToFile(file);
+        await file.writeAsBytes(await ResultRepository.download(doc));
         return right(filePath);
       }
     } catch (e) {

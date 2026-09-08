@@ -47,7 +47,7 @@ dependencies:
   firebase_core: ^4.14.0
   firebase_auth: ^6.6.1
   cloud_firestore: ^6.9.0
-  firebase_storage: ^13.5.0
+  supabase_flutter: ^2.16.0
   # loading indicator
   loading_indicator: ^3.1.1
   # for web scraping

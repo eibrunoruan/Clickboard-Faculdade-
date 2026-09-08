@@ -1,19 +1,21 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
 import '../../../models/notice_model.dart';
+import '../../../providers/supabase_storage_service.dart';
 
 class NoticeRepository {
-  final Reference _noticesRef;
+  final SupabaseStorageService _storageService;
+  final String _noticesFolder;
   final String department, session;
   NoticeRepository({
-    required FirebaseStorage firebaseStorage,
+    SupabaseStorageService? storageService,
     required this.department,
     required this.session,
-  }) : _noticesRef = firebaseStorage.ref('$department/$session/Notice');
+  })  : _storageService = storageService ?? SupabaseStorageService(),
+        _noticesFolder = '$department/$session/Notice';
 
   Future<List<Notice>> getAllNotices() async {
     List<Notice> notices = [];
@@ -29,12 +31,13 @@ class NoticeRepository {
   Future<List<Notice>> getFBNotices() async {
     List<Notice> fbNotices = [];
     try {
-      ListResult result = await _noticesRef.listAll();
-      for (var fileRef in result.items) {
-        await fileRef.getMetadata().then((value) async => fbNotices.add(Notice(
-            name: fileRef.name.split('.pdf')[0],
-            downloadUrl: await fileRef.getDownloadURL(),
-            timeCreated: value.timeCreated)));
+      final files = await _storageService.list(_noticesFolder);
+      for (var file in files) {
+        fbNotices.add(Notice(
+          name: file.name.split('.pdf')[0],
+          downloadUrl: await _storageService.signedUrl(file.path),
+          timeCreated: file.timeCreated,
+        ));
       }
     } catch (e) {
       //
