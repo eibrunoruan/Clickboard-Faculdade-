@@ -26,7 +26,7 @@ String? emailValidate(String? value) {
       .hasMatch((value ?? '').trim().toLowerCase())) {
     return null;
   }
-  return 'E-mail inválido';
+  return 'Use um e-mail @catolicasc.edu.br';
 }
 
 String? passValidate(String? value) {
