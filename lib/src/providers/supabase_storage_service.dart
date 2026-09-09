@@ -138,7 +138,16 @@ class SupabaseStorageService {
   }
 
   Future<void> delete(String path) async {
-    await _bucket.remove([path]);
+    // remove() responde 200 com lista vazia quando a RLS nega a operacao ou o
+    // objeto nao existe, entao sem esta checagem a falha passa silenciosa e a
+    // tela mostra sucesso com o arquivo ainda no bucket.
+    final removed = await _bucket.remove([path]);
+    if (removed.isEmpty) {
+      throw StorageException(
+        'Nenhum arquivo foi apagado em $path',
+        error: 'NotDeleted',
+      );
+    }
   }
 
   Future<void> rename(String currentPath, String newName) async {
