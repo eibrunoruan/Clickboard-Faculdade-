@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,9 +22,14 @@ class VerifyEmailScreen extends ConsumerStatefulWidget {
 
 class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   Timer? timer, timer2;
+
   @override
   void initState() {
     super.initState();
+    // O redirect do roteador so libera o app quando `emailVerified` vira true,
+    // e isso depende de um reload(). Por isso o polling comeca junto com a
+    // tela, e nao apenas quando o aluno pede o reenvio.
+    WidgetsBinding.instance.addPostFrameCallback((_) => watchVerification());
   }
 
   @override
@@ -33,28 +39,35 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     super.dispose();
   }
 
+  void watchVerification() {
+    timer?.cancel();
+    timer =
+        ref.read(authControllerProvider.notifier).reloadUserPeriodically(() {
+      if (mounted) GoRouter.of(context).refresh();
+    });
+  }
+
+  /// Contagem regressiva do botao de reenvio, para nao estourar a cota do
+  /// Firebase com cliques seguidos.
   void startTimer({required double seconds, required Duration step}) {
-    ref.watch(timeRemainingProvider.notifier).set(seconds);
+    ref.read(timeRemainingProvider.notifier).set(seconds);
+    timer2?.cancel();
     timer2 = Timer.periodic(step, (t) {
       ref.read(timeRemainingProvider.notifier).decrease(step);
       if (ref.read(timeRemainingProvider) == 0) t.cancel();
     });
-    timer?.cancel();
-    timer =
-        ref.read(authControllerProvider.notifier).reloadUserPeriodically(() {
-      GoRouter.of(context).refresh();
-    });
+    watchVerification();
   }
 
   Future<void> sendMail(double waitTime) async {
     if (ref.read(timeRemainingProvider) == 0) {
-      await ref.watch(authControllerProvider.notifier).verifyEmail((verify) {
+      await ref.read(authControllerProvider.notifier).verifyEmail((verify) {
         verify.fold(
             (l) => showSnackBar(
                 context: context, title: l, snackBarType: SnackBarType.error),
             (r) => showSnackBar(
                 context: context,
-                title: 'Mail sent.',
+                title: 'E-mail de verificação enviado.',
                 snackBarType: SnackBarType.good));
       });
       startTimer(seconds: waitTime, step: const Duration(milliseconds: 50));
@@ -77,9 +90,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox.square(dimension: 200, child: Lottie.asset(emailLottie)),
-            const Text('Please verify your email'),
+            const Text('Confirme seu e-mail para continuar'),
             Text(
-              ref.watch(myUserProvider)?.email ?? '',
+              ref.watch(myUserProvider)?.email ??
+                  FirebaseAuth.instance.currentUser?.email ??
+                  '',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium!
@@ -119,7 +134,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                           ],
                         )
                       : const Text(
-                          'Send Verification mail',
+                          'Reenviar e-mail de verificação',
                           style: TextStyle(fontSize: 10.37),
                           textAlign: TextAlign.center,
                         ))
@@ -137,7 +152,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     .logout(GoRouter.of(context).refresh);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Cancel'),
+              child: const Text('Sair'),
             )
           ],
         ),

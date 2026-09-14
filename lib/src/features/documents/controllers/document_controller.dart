@@ -16,6 +16,10 @@ part 'document_controller.g.dart';
 
 @riverpod
 Future<void> documentFuture(DocumentFutureRef ref, {bool isRefreshed = false}) {
+  // Depende do perfil do aluno: e ele que define a raiz do mural. Sem este
+  // watch, a busca rodava antes do login terminar e o resultado vazio ficava
+  // em cache.
+  ref.watch(myUserProvider);
   return ref
       .watch(documentControllerProvider.notifier)
       .getAllDocuments(isRefreshed: isRefreshed);
@@ -23,10 +27,40 @@ Future<void> documentFuture(DocumentFutureRef ref, {bool isRefreshed = false}) {
 
 @Riverpod(keepAlive: true)
 class DocumentController extends _$DocumentController {
-  String _documentFolder() =>
-      '${ref.read(myUserProvider)?.dept ?? ''}/${ref.read(myUserProvider)?.session ?? ''}/${ref.read(myUserProvider)?.roll ?? ''}/Documents';
+  /// Raiz compartilhada do mural. Abaixo dela existe uma subpasta por uid, e e
+  /// esse segmento que define o dono de cada arquivo.
+  ///
+  /// Devolve null enquanto o perfil do aluno nao chegou do Firestore. Antes
+  /// caia para `'/Documents'`, o app listava uma pasta inexistente e o mural
+  /// ficava vazio ate alguem puxar para atualizar.
+  String? _documentsRoot() {
+    final dept = ref.read(myUserProvider)?.dept;
+    if (dept == null || dept.isEmpty) return null;
+    return '$dept/Documents';
+  }
+
+  String? get _myUid => ref.read(myUserProvider)?.uid;
+
+  String? _myDocumentFolder() {
+    final uid = _myUid;
+    final root = _documentsRoot();
+    if (uid == null || uid.isEmpty || root == null) return null;
+    return '$root/$uid';
+  }
 
   bool get _isAdmin => ref.read(myUserProvider)?.isAdmin ?? false;
+
+  DocumentRepository get _repository => ref.read(documentRepositoryProvider);
+
+  /// O dono gerencia o proprio documento; o admin gerencia o de qualquer um.
+  bool canManage(Document document) {
+    if (_isAdmin) return true;
+    final uid = _myUid;
+    return uid != null && uid.isNotEmpty && document.ownerUid == uid;
+  }
+
+  int get myDocumentCount =>
+      state.where((document) => document.ownerUid == _myUid).length;
 
   String? _safeDocumentName(Document document, String newName) {
     final trimmedName = newName.trim();
@@ -49,8 +83,13 @@ class DocumentController extends _$DocumentController {
   }
 
   Future<void> getAllDocuments({bool isRefreshed = false}) async {
+    final root = _documentsRoot();
+    if (root == null) {
+      state = [];
+      return;
+    }
     if (!isRefreshed && state.isNotEmpty) return;
-    state = await DocumentRepository.getAllDocuments(_documentFolder());
+    state = await _repository.getAllDocuments(root);
   }
 
   FutureEither<String> saveDocumentFile(Document document) async {
@@ -59,7 +98,7 @@ class DocumentController extends _$DocumentController {
         '$appDocDir/${document.name}'; // Path : /data/user/0/com.example.jgec_notice/cache/
     final file = File(filePath);
     try {
-      await DocumentRepository.writeToFile(document, file);
+      await _repository.writeToFile(document, file);
     } catch (e) {
       return left(e.toString());
     }
@@ -71,7 +110,7 @@ class DocumentController extends _$DocumentController {
     final file = File('$filePath/${doc.name}');
     try {
       if (await Permission.manageExternalStorage.request().isGranted) {
-        await DocumentRepository.writeToFile(doc, file);
+        await _repository.writeToFile(doc, file);
         return right(filePath);
       }
     } catch (e) {
@@ -81,10 +120,12 @@ class DocumentController extends _$DocumentController {
   }
 
   FutureVoid deleteDocument(Document document) async {
-    if (!_isAdmin) return left('Somente a coordenação pode apagar documentos');
+    if (!canManage(document)) {
+      return left('Você só pode apagar documentos que você enviou');
+    }
 
     try {
-      await DocumentRepository.deleteDocument(document);
+      await _repository.deleteDocument(document);
       await getAllDocuments(isRefreshed: true);
       return right(null);
     } catch (e) {
@@ -94,8 +135,8 @@ class DocumentController extends _$DocumentController {
 
   FutureVoid renameDocument(Document document,
       {required String newName}) async {
-    if (!_isAdmin) {
-      return left('Somente a coordenação pode renomear documentos');
+    if (!canManage(document)) {
+      return left('Você só pode renomear documentos que você enviou');
     }
 
     try {
@@ -104,7 +145,7 @@ class DocumentController extends _$DocumentController {
         return left('Informe um nome de documento válido');
       }
 
-      await DocumentRepository.renameDocument(document, safeName);
+      await _repository.renameDocument(document, safeName);
       await getAllDocuments(isRefreshed: true);
       return right(null);
     } catch (e) {
@@ -113,7 +154,8 @@ class DocumentController extends _$DocumentController {
   }
 
   FutureVoid uploadFiles() async {
-    if (!_isAdmin) return left('Somente a coordenação pode enviar documentos');
+    final folder = _myDocumentFolder();
+    if (folder == null) return left('Faça login para enviar documentos');
 
     String? message;
     List<PlatformFile> result = await FilePicker.pickFiles(
@@ -134,7 +176,7 @@ class DocumentController extends _$DocumentController {
 
     try {
       for (var file in files) {
-        await DocumentRepository.uploadFile(_documentFolder(), file);
+        await _repository.uploadFile(folder, file);
       }
       await getAllDocuments(isRefreshed: true);
       return right(null);

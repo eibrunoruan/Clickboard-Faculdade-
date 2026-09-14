@@ -9,6 +9,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '/src/features/authentication/screens/login/login_page.dart';
 import '/src/features/authentication/screens/signup/signup_page.dart';
 import 'src/features/authentication/screens/forgot_password/forgot_password_screen.dart';
+import 'src/core/utils/auth_redirect.dart';
 import 'src/features/main_page/screens/main_page.dart';
 import 'src/features/profile_screen/screens/about_us.dart';
 import 'src/features/profile_screen/screens/my_account.dart';
@@ -24,22 +25,13 @@ GoRouter myGoRouter(MyGoRouterRef ref) {
 
 GoRouter goRouter = GoRouter(
   redirect: (context, state) {
-    if (!useFirebase) {
-      return state.matchedLocation.startsWith('/auth')
-          ? state.matchedLocation
-          : state.namedLocation('Login');
-    }
-
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null && !state.fullPath!.startsWith('/auth')) {
-      return state.namedLocation('Login');
-    }
-    if (user != null) {
-      if (state.matchedLocation.startsWith('/auth')) return '/';
-      if (state.matchedLocation.startsWith('/app/verify-email')) return '/';
-      return state.matchedLocation;
-    }
-    return state.matchedLocation;
+    final User? user = useFirebase ? FirebaseAuth.instance.currentUser : null;
+    return resolveRedirect(
+      useFirebase: useFirebase,
+      isSignedIn: user != null,
+      isEmailVerified: user?.emailVerified ?? false,
+      location: state.matchedLocation,
+    );
   },
   routes: [
     GoRoute(

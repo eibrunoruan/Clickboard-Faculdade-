@@ -20,15 +20,23 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
   Widget build(BuildContext context) {
     var documentsFuture = ref.watch(documentFutureProvider());
     List<Document> documents = ref.watch(documentControllerProvider);
-    final isAdmin = ref.watch(myUserProvider)?.isAdmin ?? false;
+    // Qualquer aluno logado envia os proprios documentos; o controller coloca
+    // o arquivo na subpasta do uid dele, que e o que define o dono.
+    final usuario = ref.watch(myUserProvider);
+    final meusDocumentos =
+        ref.watch(documentControllerProvider.notifier).myDocumentCount;
     return Scaffold(
       appBar: myAppBar(context: context, title: 'Clickboard'),
-      floatingActionButton: isAdmin
-          ? FloatingActionButton(
+      floatingActionButton: usuario == null
+          ? null
+          : FloatingActionButton(
               onPressed: () async {
-                if (documents.length >= 5) {
+                // O limite e por aluno, nao do mural inteiro.
+                if (meusDocumentos >= 5) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Limite atingido")));
+                      const SnackBar(
+                          content: Text(
+                              "Você já enviou o máximo de 5 documentos")));
                 } else {
                   showDialog(
                     context: context,
@@ -64,8 +72,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
               },
               tooltip: 'Adicionar documento',
               child: const Icon(Icons.add),
-            )
-          : null,
+            ),
       body: RefreshIndicator(
         onRefresh: () =>
             ref.watch(documentFutureProvider(isRefreshed: true).future),

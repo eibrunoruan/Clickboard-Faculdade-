@@ -111,7 +111,14 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
   Widget build(BuildContext context) {
     Icon documentIcon =
         _getIconForDocumentType(".${widget.document.name.split('.').last}");
-    final isAdmin = ref.watch(myUserProvider)?.isAdmin ?? false;
+    // Quem pode renomear/apagar e o dono do arquivo ou a coordenacao. A regra
+    // vive no controller (`canManage`); antes a tela olhava so `isAdmin`, o
+    // que deixava o ramo do dono inalcancavel pela interface.
+    final usuario = ref.watch(myUserProvider);
+    final podeGerenciar = usuario != null &&
+        ref
+            .read(documentControllerProvider.notifier)
+            .canManage(widget.document);
 
     return GestureDetector(
       onTap: () {
@@ -183,7 +190,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                           }
                         },
                       ),
-                      if (isAdmin) ...[
+                      if (podeGerenciar) ...[
                         const Divider(),
                         ListTile(
                           iconColor: Colors.blueAccent,

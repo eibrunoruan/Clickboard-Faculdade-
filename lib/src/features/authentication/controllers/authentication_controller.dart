@@ -68,19 +68,17 @@ class AuthController extends _$AuthController {
 
   Future<void> verifyEmail(void Function(Either<String, void>) cb) async {
     state = true;
-    String? email = FirebaseAuth.instance.currentUser?.email;
-    if (email != null) {
-      var verify = await _authRepository.verifyEmail(email);
-      cb(verify);
-    }
+    cb(await _authRepository.sendVerificationEmail());
     state = false;
   }
 
+  /// Redefinicao de senha. Chamava `verifyEmail` por engano, e como o usuario
+  /// esta deslogado nesse fluxo o `currentUser` era nulo: a tela dizia que o
+  /// e-mail tinha sido enviado sem nada sair.
   Future<void> forgotPassord(
       String email, void Function(Either<String, void>) cb) async {
     state = true;
-    var verify = await _authRepository.verifyEmail(email);
-    cb(verify);
+    cb(await _authRepository.forgotPassord(email));
     state = false;
   }
 
@@ -95,14 +93,26 @@ class AuthController extends _$AuthController {
     return right(null);
   }
 
+  /// Fica reconsultando o Firebase ate o aluno clicar no link do e-mail. O
+  /// `emailVerified` local so muda depois de um `reload()`, entao sem esse
+  /// polling a tela de verificacao nunca se liberaria sozinha.
   Timer reloadUserPeriodically(VoidCallback cb) {
-    var timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
-      await FirebaseAuth.instance.currentUser!.reload();
-      if (FirebaseAuth.instance.currentUser!.emailVerified) {
+    return Timer.periodic(const Duration(seconds: 3), (timer) async {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        timer.cancel();
+        return;
+      }
+      try {
+        await user.reload();
+      } catch (_) {
+        return; // Rede instavel: tenta de novo no proximo tick.
+      }
+      if (FirebaseAuth.instance.currentUser?.emailVerified ?? false) {
+        timer.cancel();
         cb();
       }
     });
-    return timer;
   }
 
   Future<void> logout(VoidCallback cb) async {

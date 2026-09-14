@@ -78,10 +78,28 @@ class SupabaseStorageService {
     );
   }
 
+  // Subpastas voltam do list() como entradas sem id, junto de um marcador
+  // .emptyFolderPlaceholder criado pelo proprio Supabase. Nenhum dos dois e
+  // arquivo de verdade.
+  static bool _isFile(FileObject entry) =>
+      entry.id != null && entry.name != '.emptyFolderPlaceholder';
+
   Future<List<SupabaseStorageObject>> list(String folder) async {
     final cleanFolder = normalizeFolder(folder);
     final files = await _bucket.list(path: cleanFolder);
-    return files.map((file) => _fromFileObject(cleanFolder, file)).toList();
+    return files
+        .where(_isFile)
+        .map((file) => _fromFileObject(cleanFolder, file))
+        .toList();
+  }
+
+  Future<List<String>> listFolders(String folder) async {
+    final entries = await _bucket.list(path: normalizeFolder(folder));
+    return entries
+        .where((entry) => !_isFile(entry))
+        .map((entry) => entry.name)
+        .where((name) => name != '.emptyFolderPlaceholder')
+        .toList();
   }
 
   Future<String> signedUrl(String path) {

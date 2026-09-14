@@ -52,6 +52,30 @@ class AuthenticationRepository {
     }
   }
 
+  String _emailSendFailureMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'too-many-requests':
+        return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.';
+      case 'user-not-found':
+        return 'Não existe conta com esse e-mail.';
+      case 'invalid-email':
+        return 'E-mail inválido.';
+      default:
+        return e.message ?? 'Não foi possível enviar o e-mail (${e.code}).';
+    }
+  }
+
+  /// O proprio Firebase Auth envia o e-mail de confirmacao, sem provedor SMTP
+  /// externo. Uma falha aqui nao pode derrubar um cadastro que ja foi criado,
+  /// entao o erro e engolido: a tela de verificacao tem botao de reenvio.
+  Future<void> _trySendVerificationEmail(User user) async {
+    try {
+      await user.sendEmailVerification();
+    } catch (_) {
+      // Ignorado de proposito: o usuario reenvia pela tela de verificacao.
+    }
+  }
+
   FutureEither<Student> createUserWithEmailAndPassword(Student student) async {
     UserCredential userCredential;
     try {
@@ -63,6 +87,7 @@ class AuthenticationRepository {
           email: student.email, password: student.pass!);
       student.uid = userCredential.user!.uid;
       await _users.doc(student.uid).set(student.toJSON());
+      await _trySendVerificationEmail(userCredential.user!);
       return right(student);
     } on FirebaseAuthException catch (e) {
       final ex = SignupWithEmailAndPasswordFailure.code(e.code);
@@ -136,16 +161,28 @@ class AuthenticationRepository {
 
   FutureVoid forgotPassord(String email) async {
     try {
-      return right(await _auth.sendPasswordResetEmail(email: email.trim()));
+      await _auth.sendPasswordResetEmail(email: email.trim());
+      return right(null);
+    } on FirebaseAuthException catch (e) {
+      return left(_emailSendFailureMessage(e));
     } catch (e) {
       return left(e.toString());
     }
   }
 
-  FutureVoid verifyEmail(String email) async {
+  /// Reenvio pedido pela tela de verificacao. Sem sessao ativa o Firebase nao
+  /// tem para quem enviar, e antes isso passava batido pelo `?.` e a tela
+  /// mostrava sucesso sem mandar nada.
+  FutureVoid sendVerificationEmail() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return left('Faça login novamente para receber o e-mail de verificação');
+    }
     try {
-      await _auth.currentUser?.sendEmailVerification();
+      await user.sendEmailVerification();
       return right(null);
+    } on FirebaseAuthException catch (e) {
+      return left(_emailSendFailureMessage(e));
     } catch (e) {
       return left(e.toString());
     }
