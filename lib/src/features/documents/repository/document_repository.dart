@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../../models/document_model.dart';
 import '../../../providers/supabase_storage_service.dart';
 
@@ -50,10 +49,6 @@ class DocumentRepository {
   }
 
   Future<void> renameDocument(Document document, String newName) async {
-    final appDocDir = (await getTemporaryDirectory()).path;
-    final filePath = '$appDocDir/$newName';
-    final file = File(filePath);
-    await file.writeAsBytes(await _storage.download(document.file.path));
     await _storage.rename(document.file.path, newName);
   }
 
