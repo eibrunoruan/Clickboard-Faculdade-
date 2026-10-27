@@ -50,6 +50,27 @@ void main() {
               'estado faz a tela mentir que a foto foi removida');
     });
 
+    test('sucesso devolve Right', () async {
+      final (controller: controller, container: _) =
+          montar(FakeProfileRepository());
+
+      expect((await controller.deletePhoto()).isRight(), isTrue);
+    });
+
+    test('falha devolve Left com mensagem para a tela', () async {
+      final repositorio = FakeProfileRepository();
+      repositorio.falhas['deletePhoto'] = StateError('bucket fora do ar');
+      final (controller: controller, container: _) = montar(repositorio);
+
+      final resultado = await controller.deletePhoto();
+
+      expect(resultado.isLeft(), isTrue);
+      resultado.fold(
+        (msg) => expect(msg, 'Não foi possível remover a foto de perfil'),
+        (_) => fail('falha do storage nao pode virar sucesso'),
+      );
+    });
+
     test('o indicador de carregando volta a falso mesmo com falha', () async {
       final repositorio = FakeProfileRepository();
       repositorio.falhas['deletePhoto'] = StateError('bucket fora do ar');

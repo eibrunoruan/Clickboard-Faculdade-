@@ -53,14 +53,18 @@ class ProfileController extends StateNotifier<bool> {
     }
   }
 
-  Future<void> deletePhoto() async {
+  FutureVoid deletePhoto() async {
     state = true;
     try {
       await _userProfileRepository.deletePhoto();
-    } catch (e) {
-      //
-    } finally {
+      // So limpa o estado da sessao depois do storage confirmar. Antes isso
+      // acontecia no `finally`, entao uma falha deixava a tela sem foto com o
+      // arquivo ainda no bucket.
       _ref.read(myPhotoProvider.notifier).update(null);
+      return right(null);
+    } catch (e) {
+      return left('Não foi possível remover a foto de perfil');
+    } finally {
       state = false;
     }
   }

@@ -104,13 +104,18 @@ class _MyAccountState extends ConsumerState<MyAccount> {
                   const Text('Profile Photo'),
                   IconButton(
                       onPressed: () async {
-                        try {
-                          await ref
-                              .read(profileControllerProvider.notifier)
-                              .deletePhoto();
-                        } finally {
-                          setState(() {});
-                        }
+                        final resultado = await ref
+                            .read(profileControllerProvider.notifier)
+                            .deletePhoto();
+                        if (!mounted || !context.mounted) return;
+                        resultado.fold(
+                          (erro) => showSnackBar(
+                              context: context,
+                              title: erro,
+                              snackBarType: SnackBarType.error),
+                          (_) {},
+                        );
+                        setState(() {});
                       },
                       icon: const Icon(
                         Icons.delete,
