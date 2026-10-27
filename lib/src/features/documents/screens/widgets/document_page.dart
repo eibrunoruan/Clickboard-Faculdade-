@@ -61,6 +61,9 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                       .read(documentControllerProvider.notifier)
                       .renameDocument(document, newName: renameController.text)
                       .then((result) {
+                    // A tela pode ter sido fechada durante a operacao: usar o
+                    // BuildContext depois disso lanca.
+                    if (!dialogContext.mounted || !context.mounted) return;
                     Navigator.of(dialogContext).pop();
                     context.pop();
                     result.fold(
@@ -173,6 +176,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                 .read(documentControllerProvider.notifier)
                                 .downloadDocument(widget.document)
                                 .then((path) {
+                              if (!context.mounted) return;
                               context.pop();
                               path.fold(
                                   (l) => showSnackBar(
@@ -186,7 +190,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                               });
                             });
                           } finally {
-                            Navigator.pop(context);
+                            if (context.mounted) Navigator.pop(context);
                           }
                         },
                       ),
@@ -238,6 +242,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                   .read(documentControllerProvider.notifier)
                                   .deleteDocument(widget.document)
                                   .then((path) {
+                                if (!context.mounted) return;
                                 context.pop();
                                 path.fold(
                                     (l) => showSnackBar(
@@ -251,7 +256,7 @@ class _DocumentPageState extends ConsumerState<DocumentPage> {
                                 });
                               });
                             } finally {
-                              Navigator.pop(context);
+                              if (context.mounted) Navigator.pop(context);
                             }
                           },
                         ),

@@ -30,10 +30,15 @@ class _MyAccountState extends ConsumerState<MyAccount> {
   String? name, reg;
   bool edited = false;
   void copyData(BuildContext context, String data) {
-    Clipboard.setData(ClipboardData(text: data)).then((value) => showSnackBar(
-        context: context,
-        title: 'Text Copied',
-        snackBarType: SnackBarType.good));
+    Clipboard.setData(ClipboardData(text: data)).then((value) {
+      // A tela pode ter sido fechada enquanto a area de transferencia
+      // respondia: usar o BuildContext depois disso lanca.
+      if (!context.mounted) return;
+      showSnackBar(
+          context: context,
+          title: 'Texto copiado',
+          snackBarType: SnackBarType.good);
+    });
   }
 
   Future<void> openGallery() async {
@@ -99,13 +104,18 @@ class _MyAccountState extends ConsumerState<MyAccount> {
                   const Text('Profile Photo'),
                   IconButton(
                       onPressed: () async {
-                        try {
-                          await ref
-                              .read(profileControllerProvider.notifier)
-                              .deletePhoto();
-                        } finally {
-                          setState(() {});
-                        }
+                        final resultado = await ref
+                            .read(profileControllerProvider.notifier)
+                            .deletePhoto();
+                        if (!mounted || !context.mounted) return;
+                        resultado.fold(
+                          (erro) => showSnackBar(
+                              context: context,
+                              title: erro,
+                              snackBarType: SnackBarType.error),
+                          (_) {},
+                        );
+                        setState(() {});
                       },
                       icon: const Icon(
                         Icons.delete,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';
 
 import '../../core/common_widgets/my_app_bar.dart';
+import '../../core/common_widgets/sliver_error_message.dart';
 import '../../core/utils/utils.dart';
 import '../../models/result_model.dart';
 import 'controllers/result_controller.dart';
@@ -93,9 +94,8 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
                     itemCount: results.length,
                   );
                 },
-                error: (error, stackTrace) {
-                  return const Center(child: Text('Erro'));
-                },
+                error: (error, stackTrace) =>
+                    SliverErrorMessage(error: error),
                 loading: () => const SliverToBoxAdapter(
                     child: Center(child: CircularProgressIndicator()))),
           ],
