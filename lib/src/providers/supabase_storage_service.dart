@@ -5,6 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'storage_paths.dart';
+
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
   defaultValue: 'https://czlevkffqqnzrtcnyiev.supabase.co',
@@ -44,22 +46,15 @@ class SupabaseStorageService {
 
   StorageFileApi get _bucket => _client.storage.from(supabaseStorageBucket);
 
-  String normalizeFolder(String folder) {
-    return folder
-        .split('/')
-        .where((segment) => segment.trim().isNotEmpty)
-        .join('/');
-  }
+  // Delegam para StoragePaths. Os tres metodos continuam aqui porque o resto
+  // do app e os testes existentes chamam pelo servico; a logica, que e pura,
+  // mora fora.
+  String normalizeFolder(String folder) => StoragePaths.normalizeFolder(folder);
 
-  String childPath(String folder, String fileName) {
-    final cleanFolder = normalizeFolder(folder);
-    return cleanFolder.isEmpty ? fileName : '$cleanFolder/$fileName';
-  }
+  String childPath(String folder, String fileName) =>
+      StoragePaths.childPath(folder, fileName);
 
-  String parentFolder(String path) {
-    final index = path.lastIndexOf('/');
-    return index == -1 ? '' : path.substring(0, index);
-  }
+  String parentFolder(String path) => StoragePaths.parentFolder(path);
 
   DateTime? _parseDate(Object? value) {
     if (value == null) return null;
