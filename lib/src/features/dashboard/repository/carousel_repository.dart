@@ -16,7 +16,7 @@ class CarouselRepository {
         images.add(Image.network(url, fit: BoxFit.cover));
       }
     } catch (e) {
-      print('Error fetching carousels');
+      debugPrint('Falha ao buscar os carrosseis: $e');
     }
     return images;
   }

@@ -17,8 +17,8 @@ class ProfileButton extends StatelessWidget {
         IconButton(
             onPressed: onPressed,
             style: const ButtonStyle(
-                padding: MaterialStatePropertyAll(EdgeInsets.all(15)),
-                shape: MaterialStatePropertyAll(CircleBorder(
+                padding: WidgetStatePropertyAll(EdgeInsets.all(15)),
+                shape: WidgetStatePropertyAll(CircleBorder(
                     side: BorderSide(color: Colors.grey, width: 0.5)))),
             icon: Icon(
               icon,
