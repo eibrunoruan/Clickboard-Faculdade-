@@ -13,10 +13,10 @@ import '../../../providers/supabase_storage_service.dart';
 final documentRepositoryProvider = Provider((ref) => DocumentRepository());
 
 class DocumentRepository {
-  DocumentRepository({SupabaseStorageService? storageService})
+  DocumentRepository({StorageService? storageService})
       : _storage = storageService ?? SupabaseStorageService();
 
-  final SupabaseStorageService _storage;
+  final StorageService _storage;
 
   /// Le todos os documentos abaixo de [root], que guarda uma subpasta por
   /// usuario. A lista e compartilhada: todo mundo enxerga tudo, mas o uid da
