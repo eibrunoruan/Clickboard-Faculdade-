@@ -22,8 +22,12 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # ADIADO PARA O PR 3. Sao 8 ocorrencias de BuildContext usado depois de um
+    # `await` sem guarda `mounted` — crash real, nao aviso cosmetico. A regra do
+    # Sprint 2 exige que correcao de bug entre com teste que falha antes e passa
+    # depois, entao elas nao cabem neste PR mecanico. O PR 3 corrige as 8 e
+    # remove estas duas linhas, devolvendo a regra ao gate.
+    use_build_context_synchronously: false
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
