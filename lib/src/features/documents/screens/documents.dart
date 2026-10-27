@@ -67,7 +67,8 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                         .read(documentControllerProvider.notifier)
                         .uploadFiles();
                   } finally {
-                    Navigator.pop(context);
+                    // A tela pode ter sido fechada durante o envio.
+                    if (context.mounted) Navigator.pop(context);
                   }
                 }
               },
