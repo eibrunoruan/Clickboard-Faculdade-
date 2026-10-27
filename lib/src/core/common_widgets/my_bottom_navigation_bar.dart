@@ -29,7 +29,7 @@ class MyBottomNavigationBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.background,
+          color: Theme.of(context).colorScheme.surface,
           border: const Border(
               top: BorderSide(
                   color: Color.fromARGB(255, 82, 82, 82), width: 0.1))),
