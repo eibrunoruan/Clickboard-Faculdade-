@@ -30,6 +30,9 @@ linter:
 
 analyzer:
   exclude:
+    # Gerados pelo riverpod_generator via build_runner: nao da para corrigir a
+    # mao, qualquer ajuste e sobrescrito na proxima geracao.
+    - "**/*.g.dart"
     - build/**
     - android/**
     - ios/**
