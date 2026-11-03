@@ -44,6 +44,9 @@ base class _ArquivoLocal extends PlatformFile {
   get xFile => throw UnsupportedError('nao usado no teste');
 
   @override
+  int lengthSync() => _file.lengthSync();
+
+  @override
   Future<int> length() => _file.length();
 
   @override
