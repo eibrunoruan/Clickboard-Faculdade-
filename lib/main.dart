@@ -18,13 +18,19 @@ const bool useFirebase =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: supabaseUrl,
-    publishableKey: supabasePublishableKey,
-  );
   if (useFirebase) {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
+  }
+  await Supabase.initialize(
+    url: supabaseUrl,
+    publishableKey: supabasePublishableKey,
+    // manda o token do Firebase pro Supabase saber quem e o usuario (RLS)
+    accessToken: useFirebase
+        ? () async => FirebaseAuth.instance.currentUser?.getIdToken()
+        : null,
+  );
+  if (useFirebase) {
     await FirebaseMessagingApi().initNotifications();
   }
   runApp(const ProviderScope(child: MyApp()));
