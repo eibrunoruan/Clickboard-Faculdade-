@@ -25,6 +25,12 @@ class FakeProfileRepository implements ProfileRepository {
   @override
   Future<void> uploadPhoto(File file) async => _registrar('uploadPhoto');
 
+  /// Ultimo perfil que o controller mandou salvar.
+  Student? perfilSalvo;
+
   @override
-  Future<void> editProfile(Student user) async => _registrar('editProfile');
+  Future<void> editProfile(Student user) async {
+    perfilSalvo = user;
+    _registrar('editProfile');
+  }
 }

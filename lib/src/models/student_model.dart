@@ -85,6 +85,8 @@ class Student {
             data["isAdmin"].toString().toLowerCase() == 'true');
   }
 
+  String get primeiroNome => name.trim().split(RegExp(r'\s+')).first;
+
   Student copyWith({
     String? name,
     String? reg,

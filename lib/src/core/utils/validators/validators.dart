@@ -16,7 +16,7 @@ String? regValidate(String? value) {
 }
 
 String? nameValidate(String? value) {
-  if (value == '') return 'Campo obrigatório';
+  if (value == null || value.trim().isEmpty) return 'Campo obrigatório';
   return null;
 }
 

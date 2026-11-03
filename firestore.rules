@@ -13,14 +13,17 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/Users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.isAdmin == true;
+        && get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.get('isAdmin', false) == true;
     }
 
     match /Users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
+      // perfil antigo (antes de 07/09) nao tem isAdmin; sem o get() o aluno
+      // nao conseguia nem salvar o nome
       allow update: if (isOwner(userId)
-                        && request.resource.data.isAdmin == resource.data.isAdmin)
+                        && request.resource.data.get('isAdmin', false)
+                           == resource.data.get('isAdmin', false))
                      || isAdmin();
       allow delete: if isAdmin();
     }
