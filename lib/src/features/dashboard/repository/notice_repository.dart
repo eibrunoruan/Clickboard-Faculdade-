@@ -63,23 +63,4 @@ class NoticeRepository {
     }
     return webNotices;
   }
-
-  Future<List<Notice>> getDepartmentalNotices() async {
-    List<Notice> webNotices = [];
-    final url = Uri.parse('https://jgec.ac.in/announcement/1');
-    try {
-      final Response response = await get(url);
-      var document = parse(response.body);
-      webNotices = document.querySelectorAll('div.notice-info').map((e) {
-        return Notice(
-            name: e.querySelector('a')?.innerHtml.trim() ?? '',
-            downloadUrl: e.querySelector('a')?.attributes['href']?.trim() ?? '',
-            timeCreated: DateFormat('dd MMMM yyyy')
-                .parse(e.querySelector('span')!.innerHtml.trim()));
-      }).toList();
-    } catch (e) {
-      //
-    }
-    return webNotices;
-  }
 }

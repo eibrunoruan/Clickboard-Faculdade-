@@ -16,11 +16,7 @@ class Student {
       this.isAdmin = false,
       required this.uid});
 
-  static String buildRollFromEmailAndDept(String email, String dept) {
-    email = email.trim().toLowerCase();
-    if (!isCollegeEmail(email)) return 'N/A';
-    return 'N/A';
-  }
+  static String buildRollFromEmailAndDept(String email, [String? dept]) => 'N/A';
 
   static String buildDeptFromEmail(String email) {
     email = email.trim().toLowerCase();
@@ -28,11 +24,7 @@ class Student {
     return 'CATOLICASC';
   }
 
-  static String buildFullSessionFromEmail(String email) {
-    email = email.trim().toLowerCase();
-    if (!isCollegeEmail(email)) return 'N/A';
-    return 'N/A';
-  }
+  static String buildFullSessionFromEmail(String email) => 'N/A';
 
   static bool isCollegeEmail(String email) =>
       RegExp(r'^[a-zA-Z0-9._%+-]+@catolicasc\.edu\.br$')

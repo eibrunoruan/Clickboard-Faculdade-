@@ -238,6 +238,9 @@ base class _ArquivoFalso extends PlatformFile {
   @override
   get xFile => throw UnsupportedError('nao usado neste teste');
 
+  // ignore: annotate_overrides
+  int lengthSync() => _conteudo.length;
+
   @override
   Future<int> length() async => _conteudo.length;
 
