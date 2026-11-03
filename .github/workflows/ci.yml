@@ -34,3 +34,24 @@ jobs:
       # este passo roda apenas os testes offline, sem rede e sem credenciais.
       - name: Testes
         run: flutter test
+
+  testes-integracao:
+    name: integracao supabase
+    needs: analisar-e-testar
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.1
+          cache: true
+
+      - name: Baixar dependencias
+        run: flutter pub get
+
+      - name: Testes de Integracao Supabase
+        run: flutter test test/storage_integration_test.dart test/storage_server_authorization_test.dart
+        env:
+          SUPABASE_INTEGRATION: "1"
