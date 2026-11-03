@@ -1,23 +1,44 @@
-@Timeout(Duration(minutes: 3))
-library;
-
-import 'dart:io';
+import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:clickboard/src/features/documents/controllers/document_controller.dart';
+import 'package:clickboard/src/features/documents/repository/document_repository.dart';
+import 'package:clickboard/src/models/document_model.dart';
+import 'package:clickboard/src/models/student_model.dart';
 import 'package:clickboard/src/providers/supabase_storage_service.dart';
+import 'package:clickboard/src/providers/token_supabase.dart';
+import 'package:clickboard/src/providers/utils_providers.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
-/// Teste de aceite da US-01 (PR 5): autorização no servidor (Supabase Storage RLS).
-///
-/// Diferente de document_permissions_test.dart ou storage_integration_test.dart,
-/// aqui NENHUM controller ou repository é utilizado. O teste exercita o
-/// SupabaseClient CRU, simulando um invasor ou usuário comum que tenta
-/// contornar as travas da interface gráfica chamando o endpoint de storage
-/// diretamente.
-final String? _pulado = Platform.environment['SUPABASE_INTEGRATION'] == '1'
-    ? null
-    : 'Toca o Supabase de verdade. Rode com SUPABASE_INTEGRATION=1.';
+/// Teste de aceite da US-01 sem rede: o servidor do Supabase e simulado no
+/// nivel do HTTP. O teste contra o servidor real esta em
+/// storage_rls_integration_test.dart.
+
+class _UsuarioFake implements User {
+  _UsuarioFake(this._token);
+  final String _token;
+
+  @override
+  Future<String?> getIdToken([bool forceRefresh = false]) async => _token;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _AuthFake implements FirebaseAuth {
+  _AuthFake(this.currentUser);
+
+  @override
+  final User? currentUser;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   group('Regras offline de Autorização de Servidor', () {
@@ -51,79 +72,126 @@ void main() {
     });
   });
 
-  group('Autorização no Servidor (Supabase Storage RLS com Cliente Cru)', () {
-    final deptTeste = '_testes-autorizacao/${DateTime.now().millisecondsSinceEpoch}';
-    const donoUid = 'aluno-a-dono';
-    final pastaDono = '$deptTeste/Documents/$donoUid';
-    final pastaAvisos = '$deptTeste/2026/Notice';
 
-    final conteudo = Uint8List.fromList('conteudo seguro'.codeUnits);
-    const nomeArquivo = 'documento_aluno_a.pdf';
-    final caminhoArquivo = '$pastaDono/$nomeArquivo';
-    final caminhoAviso = '$pastaAvisos/aviso_oficial.pdf';
+  group('Autorização no Servidor (Supabase simulado)', () {
+    const dono = 'aluno-a';
+    const pastaDono = 'CATOLICASC/Documents/$dono';
+    const caminhoArquivo = '$pastaDono/prova.pdf';
 
-    late SupabaseClient rawClient;
+    late List<http.BaseRequest> requisicoes;
 
-    setUpAll(() async {
-      if (_pulado != null) return;
-      rawClient = SupabaseClient(supabaseUrl, supabasePublishableKey);
+    // responde como o Supabase responde quando a RLS nega:
+    // delete -> 200 com lista vazia, upload -> 403
+    MockClient servidorComRls() => MockClient((req) async {
+          requisicoes.add(req);
+          if (req.method == 'DELETE') return http.Response('[]', 200);
+          if (req.method == 'POST' && req.url.path.contains('/list/')) {
+            return http.Response('[]', 200);
+          }
+          return http.Response(
+            jsonEncode({
+              'statusCode': '403',
+              'error': 'Unauthorized',
+              'message': 'new row violates row-level security policy',
+            }),
+            403,
+          );
+        });
 
-      // Sobe arquivo do dono
-      await rawClient.storage.from(supabaseStorageBucket).uploadBinary(
-        caminhoArquivo,
-        conteudo,
-        fileOptions: const FileOptions(upsert: true),
+    SupabaseStorageService storageComToken(String? token) =>
+        SupabaseStorageService(
+          client: SupabaseClient(
+            'https://exemplo.supabase.co',
+            'chave-publica',
+            httpClient: servidorComRls(),
+            accessToken: () async => token,
+          ),
+        );
+
+    setUp(() => requisicoes = []);
+
+    test('tokenDoUsuario devolve o token do aluno logado', () async {
+      expect(await tokenDoUsuario(_AuthFake(_UsuarioFake('token-aluno-b'))),
+          'token-aluno-b');
+    });
+
+    test('tokenDoUsuario devolve null quando ninguem esta logado', () async {
+      expect(await tokenDoUsuario(_AuthFake(null)), isNull);
+    });
+
+    test('o app manda o token do aluno em toda requisicao ao storage',
+        () async {
+      final auth = _AuthFake(_UsuarioFake('token-aluno-b'));
+      final storage = SupabaseStorageService(
+        client: SupabaseClient(
+          'https://exemplo.supabase.co',
+          'chave-publica',
+          httpClient: servidorComRls(),
+          accessToken: () => tokenDoUsuario(auth),
+        ),
+      );
+
+      await storage.list(pastaDono);
+      try {
+        await storage.delete(caminhoArquivo);
+      } on StorageException catch (_) {}
+
+      expect(requisicoes, hasLength(2));
+      for (final req in requisicoes) {
+        expect(req.headers['Authorization'], 'Bearer token-aluno-b');
+      }
+    });
+
+    test('delete negado pela RLS vira erro, nao sucesso falso', () async {
+      await expectLater(
+        storageComToken('token-aluno-b').delete(caminhoArquivo),
+        throwsA(isA<StorageException>()),
       );
     });
 
-    tearDownAll(() async {
-      if (_pulado != null) return;
-      try {
-        await rawClient.storage.from(supabaseStorageBucket).remove([caminhoArquivo, caminhoAviso]);
-      } catch (_) {}
+    test('upload negado pela RLS chega no app como 403', () async {
+      await expectLater(
+        storageComToken('token-aluno-b').uploadBytes(
+          folder: pastaDono,
+          fileName: 'intruso.pdf',
+          bytes: Uint8List.fromList([1, 2, 3]),
+        ),
+        throwsA(isA<StorageException>()
+            .having((e) => e.statusCode, 'statusCode', '403')),
+      );
     });
 
-    test('Bypass da interface: Aluno B cru tenta apagar arquivo do Aluno A e o servidor recusa', () async {
-      // O Aluno B ignora o DocumentController e chama a API do Supabase diretamente.
-      // Com as regras de RLS do PR 5 ativas, remove() no storage do Supabase retorna
-      // vazio ou erro 403, não apagando o arquivo.
-      final result = await rawClient.storage
-          .from(supabaseStorageBucket)
-          .remove([caminhoArquivo]);
+    test('coordenacao: se o servidor nega, a tela mostra erro', () async {
+      // o controller deixa a coordenacao tentar; quem decide e o servidor
+      final container = ProviderContainer(overrides: [
+        documentRepositoryProvider.overrideWithValue(DocumentRepository(
+            storageService: storageComToken('token-coordenacao'))),
+      ]);
+      addTearDown(container.dispose);
+      container.read(myUserProvider.notifier).update(Student(
+            name: 'Coordenacao',
+            roll: 'N/A',
+            reg: '',
+            email: 'coord@catolicasc.edu.br',
+            dept: 'CATOLICASC',
+            session: 'N/A',
+            isAdmin: true,
+            uid: 'coord',
+          ));
 
-      // A RLS impede a exclusão: nenhum registro é retornado como removido
-      expect(result.isEmpty, isTrue,
-          reason: 'O servidor deve impedir a exclusão direta do arquivo do Aluno A por outro aluno');
+      final resultado = await container
+          .read(documentControllerProvider.notifier)
+          .deleteDocument(Document(
+            file: const SupabaseStorageObject(
+                path: caminhoArquivo, name: 'prova.pdf'),
+            ownerUid: dono,
+          ));
 
-      // O arquivo original continua intacto no servidor
-      final lista = await rawClient.storage
-          .from(supabaseStorageBucket)
-          .list(path: pastaDono);
-      expect(lista.map((f) => f.name), contains(nomeArquivo),
-          reason: 'Arquivo do Aluno A precisa continuar no bucket');
-    }, skip: _pulado);
-
-    test('Bypass da interface: Aluno comum cru tenta enviar aviso em /Notice/ e o servidor recusa', () async {
-      // Aluno comum tenta enviar diretamente para a pasta institucional de Notice
-      // sem passar por controller e sem credencial de coordenador
-      try {
-        await rawClient.storage.from(supabaseStorageBucket).uploadBinary(
-          caminhoAviso,
-          conteudo,
-          fileOptions: const FileOptions(upsert: true),
-        );
-      } catch (e) {
-        expect(e, isA<StorageException>());
-      }
-    }, skip: _pulado);
-
-    test('Bypass da interface: Aluno comum cru tenta apagar aviso institucional e o servidor recusa', () async {
-      final result = await rawClient.storage
-          .from(supabaseStorageBucket)
-          .remove([caminhoAviso]);
-
-      expect(result.isEmpty, isTrue,
-          reason: 'Apenas coordenação pode remover avisos institucionais no servidor');
-    }, skip: _pulado);
+      expect(resultado.isLeft(), isTrue);
+      resultado.fold(
+        (msg) => expect(msg, contains('Não foi possível apagar')),
+        (_) => fail('mostrou sucesso com o servidor negando'),
+      );
+    });
   });
 }
