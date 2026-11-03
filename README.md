@@ -247,8 +247,6 @@ Os PRs #2 a #5 foram abertos em pilha e mergeados de baixo para cima, então ca�
 
 **Pipeline:** https://github.com/eibrunoruan/Clickboard-Faculdade-/actions/workflows/ci.yml
 
-**Vídeo:** _(link)_
-
 ## Configuração do servidor
 
 Para a autorização funcionar num projeto novo:
