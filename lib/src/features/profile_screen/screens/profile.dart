@@ -146,8 +146,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Student? s = ref.watch(myUserProvider);
-    String name = s!.name;
+    Student s = ref.watch(myUserProvider)!;
     return Scaffold(
         appBar: myAppBar(
           context: context,
@@ -164,7 +163,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     style: Theme.of(context).textTheme.bodyMedium,
                     children: [
                       TextSpan(
-                          text: name.split(' ')[0],
+                          text: s.primeiroNome,
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).primaryColorLight)),
