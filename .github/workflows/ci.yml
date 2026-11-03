@@ -52,7 +52,7 @@ jobs:
         run: flutter pub get
 
       - name: Testes de Integracao Supabase
-        run: flutter test test/storage_integration_test.dart test/storage_server_authorization_test.dart
+        run: flutter test test/storage_integration_test.dart test/storage_rls_integration_test.dart
         env:
           SUPABASE_INTEGRATION: "1"
           ALUNO_A_EMAIL: ${{ secrets.ALUNO_A_EMAIL }}

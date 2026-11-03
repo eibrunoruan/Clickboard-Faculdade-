@@ -22,9 +22,11 @@ import 'support/conta_teste.dart';
 ///   SUPABASE_INTEGRATION=1 flutter test test/storage_integration_test.dart
 ///
 /// Precisa das contas ALUNO_A_*, ALUNO_B_* e (opcional) COORD_* no ambiente.
-final String? _pulado = Platform.environment['SUPABASE_INTEGRATION'] == '1'
-    ? null
-    : 'Toca o Supabase de verdade. Rode com SUPABASE_INTEGRATION=1.';
+final String? _pulado = Platform.environment['SUPABASE_INTEGRATION'] != '1'
+    ? 'Toca o Supabase de verdade. Rode com SUPABASE_INTEGRATION=1.'
+    : !(temConta('ALUNO_A') && temConta('ALUNO_B'))
+        ? 'Sem as contas ALUNO_A_* e ALUNO_B_* no ambiente.'
+        : null;
 
 /// O que o file_picker entrega no celular e um [PlatformFile] apontando para um
 /// arquivo no disco. Aqui reproduzimos exatamente isso a partir de um arquivo

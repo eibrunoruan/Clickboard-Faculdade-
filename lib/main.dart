@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'src/features/authentication/controllers/authentication_controller.dart';
 import 'src/models/student_model.dart';
 import 'src/providers/supabase_storage_service.dart';
+import 'src/providers/token_supabase.dart';
 import 'src/providers/utils_providers.dart';
 import '/route_generator.dart';
 import 'src/core/utils/theme/theme.dart';
@@ -27,7 +28,7 @@ void main() async {
     publishableKey: supabasePublishableKey,
     // manda o token do Firebase pro Supabase saber quem e o usuario (RLS)
     accessToken: useFirebase
-        ? () async => FirebaseAuth.instance.currentUser?.getIdToken()
+        ? () => tokenDoUsuario(FirebaseAuth.instance)
         : null,
   );
   if (useFirebase) {
