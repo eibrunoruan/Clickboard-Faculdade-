@@ -117,8 +117,10 @@ O diretório de testes contém cinco arquivos.
 
 `storage_integration_test.dart` é a bateria que fala com o Supabase de verdade.
 
+`storage_server_authorization_test.dart` cobre a validação de autorização no servidor via SupabaseClient cru, garantindo que o servidor bloqueia tentativas de invasão e modificação não autorizada de documentos e avisos.
+
 ## Observações
 
-A autorização de documentos é aplicada no aplicativo. As políticas do bucket permitem escrita e exclusão para a chave pública, portanto a trava é de interface e não de servidor. Fechar isso no servidor exigiria validar o token do Firebase dentro do Supabase, por meio de uma função de borda.
+A autorização de documentos e avisos é aplicada a nível de servidor via Row Level Security (RLS) no Supabase (`supabase/storage_policies.sql`). A role pública (`anon`) teve suas permissões de inserção, alteração e deleção revogadas. Alunos só podem enviar, renomear e excluir arquivos na sua própria subpasta (`<dept>/Documents/<uid>/`), enquanto a pasta institucional de avisos (`/Notice/`) é restrita à coordenação (`admins`). No aplicativo, avisos seguem em modo somente leitura para alunos; a interface visual de gerenciamento de avisos pela coordenação ficou fora deste incremento, mas as regras de segurança no servidor já se encontram ativas e testadas.
 
-A regra atual do Firestore permite que cada pessoa edite o próprio documento de perfil, inclusive o campo que marca coordenação. Vale revisar antes de colocar em produção.
+No Firestore, a regra de atualização de perfil em `firestore.rules` foi ajustada para que o campo `isAdmin` seja imutável pelo próprio usuário, eliminando o risco de auto-promoção e escalada de privilégio.
