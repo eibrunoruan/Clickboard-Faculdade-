@@ -14,10 +14,17 @@ final userProfileRepositoryProvider = Provider((ref) {
 
 class ProfileRepository {
   final FirebaseFirestore _firestore;
-  final SupabaseStorageService _storageService;
-  ProfileRepository({required FirebaseFirestore firestore})
-      : _firestore = firestore,
-        _storageService = SupabaseStorageService();
+  final StorageService _storageService;
+
+  /// [storageService] e injetavel para o teste poder substituir o storage.
+  /// Antes era instanciado aqui dentro, e `SupabaseStorageService()` sem
+  /// cliente cai no singleton `Supabase.instance`, que nao sobe dentro do
+  /// `flutter test` — qualquer teste deste repositorio morria no construtor.
+  ProfileRepository({
+    required FirebaseFirestore firestore,
+    StorageService? storageService,
+  })  : _firestore = firestore,
+        _storageService = storageService ?? SupabaseStorageService();
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
 
