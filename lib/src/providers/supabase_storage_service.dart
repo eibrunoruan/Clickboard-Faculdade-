@@ -5,6 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'storage_paths.dart';
+
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
   defaultValue: 'https://czlevkffqqnzrtcnyiev.supabase.co',
@@ -36,7 +38,31 @@ class SupabaseStorageObject {
   });
 }
 
-class SupabaseStorageService {
+/// Contrato de armazenamento usado pelos repositorios.
+///
+/// Existe para que o `DocumentRepository` e o `ProfileRepository` dependam de
+/// uma abstracao em vez do cliente concreto do Supabase. Sem isso nao havia
+/// como exercitar o caminho de sucesso (enviar, apagar, renomear) dentro de
+/// `flutter test`: so a recusa dava para testar, porque ela retorna antes de
+/// tocar na rede.
+abstract interface class StorageService {
+  Future<List<SupabaseStorageObject>> list(String folder);
+  Future<List<String>> listFolders(String folder);
+  Future<String> signedUrl(String path);
+  Future<Uint8List> download(String path);
+  Future<void> uploadPlatformFile(String folder, PlatformFile file);
+  Future<String> uploadFile(String folder, String fileName, File file);
+  Future<String> uploadBytes({
+    required String folder,
+    required String fileName,
+    required Uint8List bytes,
+    String? contentType,
+  });
+  Future<void> delete(String path);
+  Future<void> rename(String currentPath, String newName);
+}
+
+class SupabaseStorageService implements StorageService {
   SupabaseStorageService({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
 
@@ -44,22 +70,15 @@ class SupabaseStorageService {
 
   StorageFileApi get _bucket => _client.storage.from(supabaseStorageBucket);
 
-  String normalizeFolder(String folder) {
-    return folder
-        .split('/')
-        .where((segment) => segment.trim().isNotEmpty)
-        .join('/');
-  }
+  // Delegam para StoragePaths. Os tres metodos continuam aqui porque o resto
+  // do app e os testes existentes chamam pelo servico; a logica, que e pura,
+  // mora fora.
+  String normalizeFolder(String folder) => StoragePaths.normalizeFolder(folder);
 
-  String childPath(String folder, String fileName) {
-    final cleanFolder = normalizeFolder(folder);
-    return cleanFolder.isEmpty ? fileName : '$cleanFolder/$fileName';
-  }
+  String childPath(String folder, String fileName) =>
+      StoragePaths.childPath(folder, fileName);
 
-  String parentFolder(String path) {
-    final index = path.lastIndexOf('/');
-    return index == -1 ? '' : path.substring(0, index);
-  }
+  String parentFolder(String path) => StoragePaths.parentFolder(path);
 
   DateTime? _parseDate(Object? value) {
     if (value == null) return null;
@@ -84,6 +103,7 @@ class SupabaseStorageService {
   static bool _isFile(FileObject entry) =>
       entry.id != null && entry.name != '.emptyFolderPlaceholder';
 
+  @override
   Future<List<SupabaseStorageObject>> list(String folder) async {
     final cleanFolder = normalizeFolder(folder);
     final files = await _bucket.list(path: cleanFolder);
@@ -93,6 +113,7 @@ class SupabaseStorageService {
         .toList();
   }
 
+  @override
   Future<List<String>> listFolders(String folder) async {
     final entries = await _bucket.list(path: normalizeFolder(folder));
     return entries
@@ -102,14 +123,17 @@ class SupabaseStorageService {
         .toList();
   }
 
+  @override
   Future<String> signedUrl(String path) {
     return _bucket.createSignedUrl(path, 60 * 60);
   }
 
+  @override
   Future<Uint8List> download(String path) {
     return _bucket.download(path);
   }
 
+  @override
   Future<void> uploadPlatformFile(String folder, PlatformFile file) async {
     final path = childPath(folder, file.name);
     final contentType = file.path == null ? null : lookupMimeType(file.path!);
@@ -127,6 +151,7 @@ class SupabaseStorageService {
     );
   }
 
+  @override
   Future<String> uploadFile(String folder, String fileName, File file) async {
     final path = childPath(folder, fileName);
     await _bucket.upload(
@@ -140,6 +165,7 @@ class SupabaseStorageService {
     return signedUrl(path);
   }
 
+  @override
   Future<String> uploadBytes({
     required String folder,
     required String fileName,
@@ -155,6 +181,7 @@ class SupabaseStorageService {
     return signedUrl(path);
   }
 
+  @override
   Future<void> delete(String path) async {
     // remove() responde 200 com lista vazia quando a RLS nega a operacao ou o
     // objeto nao existe, entao sem esta checagem a falha passa silenciosa e a
@@ -168,6 +195,7 @@ class SupabaseStorageService {
     }
   }
 
+  @override
   Future<void> rename(String currentPath, String newName) async {
     await _bucket.move(
         currentPath, childPath(parentFolder(currentPath), newName));
