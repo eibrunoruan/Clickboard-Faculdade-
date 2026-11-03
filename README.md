@@ -43,7 +43,7 @@ Nenhuma das duas é coordenação. As duas são alunos comuns, o que é exatamen
 
 O mural já contém dois arquivos no bucket, um de cada conta.
 
-O arquivo chamado `Ata-da-Coordenacao.pdf` pertence ao colega. O arquivo chamado `Trabalho-Clickboard.pdf` pertence ao aluno.
+O arquivo chamado `Ata-da-Coordenacao.pdf` pertence ao colega. O arquivo chamado `relatorio_xp_clickboard (1).pdf` pertence ao aluno.
 
 ## Como rodar o aplicativo
 
@@ -73,7 +73,7 @@ Entre com a conta do aluno e abra a aba de documentos na barra inferior.
 
 **Passo um.** Segure o dedo sobre o cartão do arquivo `Ata-da-Coordenacao.pdf`. O menu abre com apenas uma opção, que é baixar. Não aparece opção de renomear nem de apagar, porque esse arquivo é do colega.
 
-**Passo dois.** Segure o dedo sobre o cartão do arquivo `Trabalho-Clickboard.pdf`. O menu abre com três opções, que são baixar, renomear e apagar. Esse arquivo é do próprio aluno.
+**Passo dois.** Segure o dedo sobre o cartão do arquivo `relatorio_xp_clickboard (1).pdf`. O menu abre com três opções, que são baixar, renomear e apagar. Esse arquivo é do próprio aluno.
 
 A diferença entre os dois menus é a demonstração completa da permissão. Um toque simples apenas abre o arquivo. O menu só aparece mantendo o dedo pressionado.
 
