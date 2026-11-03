@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# PRs empilhados geram muitas execucoes; cancela as superadas.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analisar-e-testar:
+    name: analyze e test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Versao fixa de proposito: `channel: stable` muda sob os pes e quebraria
+      # a build sem ninguem ter mexido no codigo.
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.1
+          cache: true
+
+      - name: Baixar dependencias
+        run: flutter pub get
+
+      - name: Analise estatica
+        run: flutter analyze
+
+      # A bateria de integracao se auto-pula sem SUPABASE_INTEGRATION=1, entao
+      # este passo roda apenas os testes offline, sem rede e sem credenciais.
+      - name: Testes
+        run: flutter test

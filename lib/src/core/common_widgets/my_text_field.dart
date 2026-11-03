@@ -115,25 +115,25 @@ class _MyTextFieldState extends ConsumerState<MyTextField> {
           labelText: widget.hint,
           floatingLabelBehavior:
               (widget.noBorder == true) ? FloatingLabelBehavior.never : null,
-          floatingLabelStyle: MaterialStateTextStyle.resolveWith(
-            (Set<MaterialState> states) {
-              Color? color = states.contains(MaterialState.error)
+          floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+            (Set<WidgetState> states) {
+              Color? color = states.contains(WidgetState.error)
                   ? Theme.of(context).colorScheme.error
-                  : (!states.contains(MaterialState.focused))
+                  : (!states.contains(WidgetState.focused))
                       ? Colors.grey
                       : null;
               return TextStyle(color: color, letterSpacing: 1.3);
             },
           ),
-          labelStyle: MaterialStateTextStyle.resolveWith(
-            (Set<MaterialState> states) {
+          labelStyle: WidgetStateTextStyle.resolveWith(
+            (Set<WidgetState> states) {
               if (widget.hintColor != null) {
                 return TextStyle(
                     color: widget.hintColor, fontWeight: FontWeight.bold);
               }
-              Color? color = states.contains(MaterialState.error)
+              Color? color = states.contains(WidgetState.error)
                   ? Theme.of(context).colorScheme.error
-                  : (!states.contains(MaterialState.focused))
+                  : (!states.contains(WidgetState.focused))
                       ? Colors.grey
                       : null;
               return TextStyle(color: color, letterSpacing: 1.3);

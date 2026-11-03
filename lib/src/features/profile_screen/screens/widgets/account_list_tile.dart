@@ -25,7 +25,7 @@ class AccountListTile extends StatelessWidget {
             trailing: (nextDisabled)
                 ? null
                 : IconButton(
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onSurface,
                     onPressed: onPress,
                     icon: const Icon(Icons.arrow_circle_right_outlined))));
   }

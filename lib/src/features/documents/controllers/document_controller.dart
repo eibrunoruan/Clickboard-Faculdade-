@@ -160,7 +160,6 @@ class DocumentController extends _$DocumentController {
     String? message;
     List<PlatformFile> result = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowMultiple: true,
       allowedExtensions: ['jpg', 'pdf', 'doc', 'docx', 'png'],
     );
     if (result.isEmpty) return right(null);

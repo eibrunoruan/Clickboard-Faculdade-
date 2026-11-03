@@ -96,7 +96,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                     child: SearchAnchor(
                         builder: (context, controller) {
                           return SearchBar(
-                            padding: const MaterialStatePropertyAll(
+                            padding: const WidgetStatePropertyAll(
                                 EdgeInsets.symmetric(horizontal: 20)),
                             leading: const Icon(
                               Icons.search,
@@ -109,7 +109,7 @@ class _DocumentScreenState extends ConsumerState<DocumentScreen> {
                               });
                             },
                             hintText: 'Nome do documento',
-                            hintStyle: MaterialStatePropertyAll(
+                            hintStyle: WidgetStatePropertyAll(
                                 TextStyle(color: Colors.grey[500])),
                           );
                         },

@@ -34,7 +34,8 @@ migrate_working_dir/
 .pub/
 /build/
 /lib/firebase_options.dart
-pubspec.lock
+# pubspec.lock fica versionado: este repositorio e aplicacao, nao pacote.
+# Sem ele o CI resolvia versoes diferentes das locais e quebrava sozinho.
 
 # Symbolication related
 app.*.symbols

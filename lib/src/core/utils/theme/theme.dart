@@ -11,7 +11,7 @@ class AppTheme {
   static final ThemeData darkTheme = ThemeData().copyWith(
       colorScheme: darkScheme,
       bottomAppBarTheme: const BottomAppBarThemeData(elevation: 10, height: 20),
-      scaffoldBackgroundColor: const ColorScheme.dark().background,
+      scaffoldBackgroundColor: const ColorScheme.dark().surface,
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
             fontSize: 35, fontFamily: 'Noyh', fontWeight: FontWeight.bold),
