@@ -315,18 +315,20 @@ class _MyAccountState extends ConsumerState<MyAccount> {
                                                   .notifier)
                                               .changeUserData(
                                                   name: name, reg: reg)
-                                              .then((value) => value.fold(
-                                                  (l) => showSnackBar(
-                                                      context: context,
-                                                      title:
-                                                          'Coudn\'t update user',
-                                                      snackBarType:
-                                                          SnackBarType.error),
-                                                  (r) => showSnackBar(
-                                                      context: context,
-                                                      title: 'Updated',
-                                                      snackBarType:
-                                                          SnackBarType.good)));
+                                              .then((value) {
+                                            if (!context.mounted) return;
+                                            value.fold(
+                                                (erro) => showSnackBar(
+                                                    context: context,
+                                                    title: erro,
+                                                    snackBarType:
+                                                        SnackBarType.error),
+                                                (_) => showSnackBar(
+                                                    context: context,
+                                                    title: 'Perfil atualizado',
+                                                    snackBarType:
+                                                        SnackBarType.good));
+                                          });
                                         }
                                       },
                                       child: (!ref

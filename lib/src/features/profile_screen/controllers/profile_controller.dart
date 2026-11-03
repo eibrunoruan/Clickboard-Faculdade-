@@ -27,6 +27,8 @@ class ProfileController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
   FutureVoid changeUserData({String? name, String? reg}) async {
+    name = name?.trim();
+    if (name != null && name.isEmpty) return left('Campo obrigatório');
     Student? newStudent =
         _ref.read(myUserProvider)!.copyWith(name: name, reg: reg);
     state = true;
