@@ -55,3 +55,9 @@ jobs:
         run: flutter test test/storage_integration_test.dart test/storage_server_authorization_test.dart
         env:
           SUPABASE_INTEGRATION: "1"
+          ALUNO_A_EMAIL: ${{ secrets.ALUNO_A_EMAIL }}
+          ALUNO_A_SENHA: ${{ secrets.ALUNO_A_SENHA }}
+          ALUNO_B_EMAIL: ${{ secrets.ALUNO_B_EMAIL }}
+          ALUNO_B_SENHA: ${{ secrets.ALUNO_B_SENHA }}
+          COORD_EMAIL: ${{ secrets.COORD_EMAIL }}
+          COORD_SENHA: ${{ secrets.COORD_SENHA }}

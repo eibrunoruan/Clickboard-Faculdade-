@@ -13,12 +13,15 @@ import 'package:clickboard/src/providers/utils_providers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'support/conta_teste.dart';
 
 /// Este arquivo fala com o bucket de verdade, entao nao roda junto com os
 /// testes normais. Para executar:
 ///
 ///   SUPABASE_INTEGRATION=1 flutter test test/storage_integration_test.dart
+///
+/// Precisa das contas ALUNO_A_*, ALUNO_B_* e (opcional) COORD_* no ambiente.
 final String? _pulado = Platform.environment['SUPABASE_INTEGRATION'] == '1'
     ? null
     : 'Toca o Supabase de verdade. Rode com SUPABASE_INTEGRATION=1.';
@@ -63,9 +66,14 @@ void main() {
   // sobra aparece no mural real.
   final deptTeste = '_testes-automatizados/${DateTime.now().millisecondsSinceEpoch}';
   final raiz = '$deptTeste/Documents';
-  const dono = 'aluno-dono';
-  const outro = 'aluno-outro';
-  final pastaDoDono = '$raiz/$dono';
+  final semCoordenacao =
+      temConta('COORD') ? null : 'Sem COORD_EMAIL/COORD_SENHA no ambiente.';
+
+  late ContaTeste contaDono;
+  late ContaTeste contaOutro;
+  late String dono;
+  late String outro;
+  late String pastaDoDono;
 
   final conteudo = Uint8List.fromList(
       'documento de teste ${DateTime.now().toIso8601String()}'.codeUnits);
@@ -90,9 +98,9 @@ void main() {
   /// Controller ligado ao bucket de verdade: o unico override e o repositorio,
   /// para trocar o storage. Tudo o mais (permissao, tratamento de erro,
   /// recarga da lista) e o codigo que roda no app.
-  DocumentController controllerDe(Student usuario) {
+  DocumentController controllerDe(Student usuario, {DocumentRepository? repo}) {
     final container = ProviderContainer(overrides: [
-      documentRepositoryProvider.overrideWithValue(repository),
+      documentRepositoryProvider.overrideWithValue(repo ?? repository),
     ]);
     addTearDown(container.dispose);
     container.read(myUserProvider.notifier).update(usuario);
@@ -105,10 +113,15 @@ void main() {
         ownerUid: dono,
       );
 
-  setUpAll(() {
-    storage = SupabaseStorageService(
-      client: SupabaseClient(supabaseUrl, supabasePublishableKey),
-    );
+  setUpAll(() async {
+    if (_pulado != null) return;
+    contaDono = await entrar('ALUNO_A');
+    contaOutro = await entrar('ALUNO_B');
+    dono = contaDono.uid;
+    outro = contaOutro.uid;
+    pastaDoDono = '$raiz/$dono';
+
+    storage = SupabaseStorageService(client: contaDono.cliente);
     repository = DocumentRepository(storageService: storage);
     arquivoLocal = File(
         '${Directory.systemTemp.path}/clickboard-teste-${DateTime.now().millisecondsSinceEpoch}.pdf')
@@ -200,14 +213,19 @@ void main() {
   }, skip: _pulado);
 
   test('ADMIN: a coordenacao apaga arquivo de aluno pelo controller', () async {
-    final admin = controllerDe(aluno(uid: 'coordenacao', isAdmin: true));
+    final contaCoord = await entrar('COORD');
+    final admin = controllerDe(
+      aluno(uid: contaCoord.uid, isAdmin: true),
+      repo: DocumentRepository(
+          storageService: SupabaseStorageService(client: contaCoord.cliente)),
+    );
 
     final resultado = await admin.deleteDocument(documentoDoDono());
     expect(resultado.isRight(), isTrue);
 
     expect((await storage.list(pastaDoDono)).map((a) => a.path),
         isNot(contains(caminhoRemoto)));
-  }, skip: _pulado);
+  }, skip: _pulado ?? semCoordenacao);
 
   test('DELETE FALSO: apagar o que nao existe vira erro na tela, nao sucesso',
       () async {
