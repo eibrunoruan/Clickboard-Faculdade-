@@ -59,4 +59,33 @@ void main() {
       expect(student.dept, 'Others');
     });
   });
+
+  group('Student helpers (remover codigo morto - Smell 4)', () {
+    test('buildRollFromEmailAndDept sempre retorna N/A', () {
+      expect(
+        Student.buildRollFromEmailAndDept(
+            'aluno@catolicasc.edu.br', 'CATOLICASC'),
+        'N/A',
+      );
+      expect(
+        Student.buildRollFromEmailAndDept('estranho@gmail.com', 'Others'),
+        'N/A',
+      );
+      expect(
+        Student.buildRollFromEmailAndDept('qualquer@email.com', ''),
+        'N/A',
+      );
+    });
+
+    test('buildFullSessionFromEmail sempre retorna N/A', () {
+      expect(
+        Student.buildFullSessionFromEmail('aluno@catolicasc.edu.br'),
+        'N/A',
+      );
+      expect(
+        Student.buildFullSessionFromEmail('estranho@gmail.com'),
+        'N/A',
+      );
+    });
+  });
 }
