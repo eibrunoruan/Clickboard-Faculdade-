@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/common_widgets/my_app_bar.dart';
 import '../../../models/notice_model.dart';
+import '../../../providers/utils_providers.dart';
 import '../controllers/carousel_controller.dart';
 import '../controllers/notice_controller.dart';
 import 'widgets/notice_tile.dart';
+import 'widgets/publish_notice_dialog.dart';
 
 class Dashboard extends ConsumerWidget {
   const Dashboard({super.key});
@@ -26,10 +28,29 @@ class Dashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     var noticesFuture = ref.watch(noticeFutureProvider());
     var carouselFuture = ref.watch(carouselFutureProvider());
-    List<Notice> notices = ref.read(noticeControllerProvider);
+    // Observa o controller de forma reativa para que novas publicações
+    // ou exclusões apareçam imediatamente na tela.
+    List<Notice> notices = ref.watch(noticeControllerProvider);
     List<Image> carouselImages = ref.read(carouselControllerProvider);
+    final usuario = ref.watch(myUserProvider);
+    final bool canPublish = usuario?.isAdmin ?? false;
+
     return Scaffold(
       appBar: myAppBar(context: context, title: 'Clickboard'),
+      floatingActionButton: canPublish
+          ? FloatingActionButton(
+              key: const Key('add_notice_fab'),
+              tooltip: 'Publicar aviso',
+              onPressed: () {
+                ref.read(noticePublishStateProvider.notifier).setInitial();
+                showDialog(
+                  context: context,
+                  builder: (context) => const PublishNoticeDialog(),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () =>
             ref.watch(noticeFutureProvider(isRefreshed: true).future),
@@ -44,8 +65,7 @@ class Dashboard extends ConsumerWidget {
                           return CarouselSlider.builder(
                             itemBuilder: (context, index, realIndex) {
                               return buildCarouselContainer(
-                                  child:
-                                carouselImages[index]);
+                                  child: carouselImages[index]);
                             },
                             itemCount: carouselImages.length,
                             options: CarouselOptions(

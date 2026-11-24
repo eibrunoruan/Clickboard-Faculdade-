@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import '../../../providers/supabase_storage_service.dart';
 
 class CarouselRepository {
-  final SupabaseStorageService _storageService;
+  final StorageService? _storageService;
 
-  CarouselRepository({SupabaseStorageService? storageService})
-      : _storageService = storageService ?? SupabaseStorageService();
+  CarouselRepository({StorageService? storageService})
+      : _storageService = storageService;
+
   Future<List<Image>> getAllImages() async {
     List<Image> images = [];
     try {
-      final imageFiles = await _storageService.list('Carousel');
+      final storage = _storageService ?? SupabaseStorageService();
+      final imageFiles = await storage.list('Carousel');
       for (var file in imageFiles) {
-        final url = await _storageService.signedUrl(file.path);
+        final url = await storage.signedUrl(file.path);
         images.add(Image.network(url, fit: BoxFit.cover));
       }
     } catch (e) {
