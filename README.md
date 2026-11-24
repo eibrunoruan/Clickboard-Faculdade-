@@ -125,7 +125,7 @@ flutter test test/storage_integration_test.dart test/storage_rls_integration_tes
 
 ## Observações
 
-Avisos continuam somente leitura no app. A interface para a coordenação enviar e apagar avisos ficou fora do Sprint 2 (é feature nova); a regra do servidor que só deixa a coordenação escrever na pasta de avisos já está aplicada e testada.
+A coordenação publica avisos pelo botão de adição no mural. O formulário pede título e PDF. No sucesso, mostra "Aviso publicado com sucesso!", fecha e o aviso entra no topo da lista na hora. Na queda de conexão, mostra "Erro de conexão ao enviar aviso. Verifique sua rede e tente novamente" e mantém o que foi digitado. Aluno comum não vê o botão, e a regra do servidor que só deixa a coordenação escrever na pasta de avisos continua aplicada. Apagar avisos pelo app ainda não existe.
 
 A redefinição de senha da N1 continua sem teste automatizado.
 

@@ -9,7 +9,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/utils/utils.dart';
 import '../../../models/notice_model.dart';
 import '../../../providers/type_defs.dart';
-import '../../../providers/utils_providers.dart';
 import '../repository/notice_repository.dart';
 
 part 'notice_controller.g.dart';
@@ -23,23 +22,22 @@ Future<void> noticeFuture(NoticeFutureRef ref, {bool isRefreshed = false}) {
 
 @Riverpod(keepAlive: true)
 class NoticeController extends _$NoticeController {
-  late NoticeRepository _noticeRepository;
-
-  init() {
-    _noticeRepository = NoticeRepository(
-        department: ref.read(myUserProvider)?.dept ?? '',
-        session: ref.read(myUserProvider)?.session ?? '');
-  }
+  NoticeRepository get _noticeRepository => ref.read(noticeRepositoryProvider);
 
   @override
   List<Notice> build() {
-    init();
     return [];
   }
 
   Future<void> getAllNotices({bool isRefreshed = false}) async {
     if (!isRefreshed && state.isNotEmpty) return;
     state = await _noticeRepository.getAllNotices();
+  }
+
+  /// Coloca o aviso recem-publicado no topo do mural. Trocar o `state` e o
+  /// que faz a Dashboard redesenhar na hora, sem puxar para atualizar.
+  void addPublished(Notice notice) {
+    state = [notice, ...state.where((n) => n.name != notice.name)];
   }
 
   FutureEither<String> saveNoticeFile(Notice notice) async {

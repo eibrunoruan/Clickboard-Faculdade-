@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/common_widgets/my_app_bar.dart';
+import '../../../core/common_widgets/sliver_error_message.dart';
 import '../../../models/notice_model.dart';
+import '../../../providers/utils_providers.dart';
 import '../controllers/carousel_controller.dart';
 import '../controllers/notice_controller.dart';
+import 'publish_notice_screen.dart';
 import 'widgets/notice_tile.dart';
 
 class Dashboard extends ConsumerWidget {
@@ -26,10 +29,23 @@ class Dashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     var noticesFuture = ref.watch(noticeFutureProvider());
     var carouselFuture = ref.watch(carouselFutureProvider());
-    List<Notice> notices = ref.read(noticeControllerProvider);
+    // watch, e nao read: e o que faz o aviso recem-publicado aparecer na
+    // lista sem reiniciar o app.
+    List<Notice> notices = ref.watch(noticeControllerProvider);
     List<Image> carouselImages = ref.read(carouselControllerProvider);
+    // Avisos sao institucionais: so a coordenacao publica.
+    final isAdmin = ref.watch(myUserProvider)?.isAdmin ?? false;
     return Scaffold(
       appBar: myAppBar(context: context, title: 'Clickboard'),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (_) => const PublishNoticeScreen())),
+              tooltip: 'Publicar aviso',
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () =>
             ref.watch(noticeFutureProvider(isRefreshed: true).future),
@@ -92,9 +108,8 @@ class Dashboard extends ConsumerWidget {
                     itemCount: notices.length,
                   );
                 },
-                error: (error, stackTrace) {
-                  return const SliverToBoxAdapter(child: SizedBox());
-                },
+                error: (error, stackTrace) =>
+                    SliverErrorMessage(error: error),
                 loading: () => const SliverToBoxAdapter(
                     child: Center(child: CircularProgressIndicator()))),
           ],
